@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { usePermissions } from "@/hooks/use-permissions"
+import { Plus } from "lucide-react"
+import Link from "next/link"
+import { useState } from "react"
 
 interface DocumentItem {
   type: "faq" | "topic" | "video" | "link"
@@ -85,7 +86,10 @@ export default function Documentation() {
         <h1 className="text-4xl font-bold">Documentação</h1>
         {hasPermission("documentation", "create") && (
           <Button asChild>
-            <Link href="/documentation/new">Adicionar Manual</Link>
+            <Link href="/documentation/new">
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Manual
+            </Link>
           </Button>
         )}
       </div>
@@ -138,7 +142,7 @@ export default function Documentation() {
                     {item.type === "link" && (
                       <div className="mt-4">
                         <Button asChild>
-                          <Link href={item.linkUrl} target="_blank" rel="noopener noreferrer">
+                          <Link href={item.linkUrl as string} target="_blank" rel="noopener noreferrer">
                             Acessar Link
                           </Link>
                         </Button>

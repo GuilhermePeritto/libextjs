@@ -1,10 +1,12 @@
 "use client"
 
 import { ComponentsPaginationFooter } from "@/components/components-pagination-footer"
+import { ExtComponentRenderer } from "@/components/ext-component-renderer"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -16,7 +18,7 @@ import {
   type Componente,
 } from "@/data/componentes-iniciais"
 import { usePermissions } from "@/hooks/use-permissions"
-import { Check, Copy, File, Folder, Grid, List, Plus, Search } from "lucide-react"
+import { Check, Copy, File, Filter, Folder, Grid, List, Plus, Search } from "lucide-react"
 import Link from "next/link"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
@@ -57,9 +59,10 @@ const renderCode = (item: ComponentFile | ComponentFolder): React.ReactNode => {
   if ("content" in item) {
     return (
       <SyntaxHighlighter
-        language="jsx"
+        language="tsx"
         style={oneDark}
         customStyle={{ background: "transparent", fontSize: "14px", lineHeight: "1.5" }}
+        codeTagProps={{ style: { background: "transparent" } }}
       >
         {item.content}
       </SyntaxHighlighter>
@@ -86,6 +89,12 @@ export default function Componentes() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(6)
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+
+  const categories = useMemo(() => {
+    const uniqueCategories = new Set(componentes.map((componente) => componente.pasta).filter(Boolean))
+    return Array.from(uniqueCategories)
+  }, [componentes])
 
   const filteredComponents = useMemo(() => {
     return componentes.filter((componente) => {
@@ -94,10 +103,12 @@ export default function Componentes() {
       )
 
       const searchTerms = searchQuery.toLowerCase().split(" ")
+      const matchesSearch = searchTerms.every((term) => searchFields.some((field) => field.includes(term)))
+      const matchesCategory = selectedCategory ? componente.pasta === selectedCategory : true
 
-      return searchTerms.every((term) => searchFields.some((field) => field.includes(term)))
+      return matchesSearch && matchesCategory
     })
-  }, [componentes, searchQuery])
+  }, [componentes, searchQuery, selectedCategory])
 
   const totalPages = Math.ceil(filteredComponents.length / itemsPerPage)
   const paginatedComponents = filteredComponents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
@@ -109,13 +120,13 @@ export default function Componentes() {
     setTimeout(() => setCopiado(null), 2000)
   }
 
-  // Reset page when search changes
+  // Reset page when search or category changes
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery])
+  }, [searchQuery, selectedCategory])
 
   return (
-    <div className="container mx-auto pt-8 px-4">
+    <div className="container mx-auto py-8 px-4 pb-24">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <h1 className="text-4xl font-bold">Componentes</h1>
         <div className="flex space-x-2 w-full sm:w-auto">
@@ -128,6 +139,22 @@ export default function Componentes() {
               className="pl-8"
             />
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-10 px-0">
+                <Filter className="h-4 w-4" />
+                <span className="sr-only">Filtrar por categoria</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => setSelectedCategory(null)}>Todas as categorias</DropdownMenuItem>
+              {categories.map((category) => (
+                <DropdownMenuItem key={category} onSelect={() => setSelectedCategory(category as any)}>
+                  {category}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Toggle
             pressed={modoVisualizacao === "grade"}
             onPressedChange={() => setModoVisualizacao(modoVisualizacao === "grade" ? "lista" : "grade")}
@@ -145,9 +172,12 @@ export default function Componentes() {
         </div>
       </div>
 
-      {searchQuery && (
+      {(searchQuery || selectedCategory) && (
         <div className="mb-4">
-          <p className="text-sm text-muted-foreground">{filteredComponents.length} resultado(s) encontrado(s)</p>
+          <p className="text-sm text-muted-foreground">
+            {filteredComponents.length} resultado(s) encontrado(s)
+            {selectedCategory && ` na categoria "${selectedCategory}"`}
+          </p>
         </div>
       )}
 
@@ -158,21 +188,19 @@ export default function Componentes() {
           }`}
         >
           {paginatedComponents.map((componente, index) => (
-            <Link
-              href={`/components/${encodeURIComponent(componente.nome)}`}
+            <Card
               key={index}
-              className="block transition-transform hover:scale-105"
+              className={`flex flex-col h-full ${componente.tamanho === "largo" ? "lg:col-span-2 xl:col-span-3" : ""}`}
             >
-              <Card
-                className={`flex flex-col h-full ${
-                  componente.tamanho === "largo" ? "lg:col-span-2 xl:col-span-3" : ""
-                }`}
-              >
-                <CardContent className="flex-grow p-6">
+              <CardContent className="flex-grow p-6">
+                <Link
+                  href={`/components/${encodeURIComponent(componente.nome)}`}
+                  className="block transition-transform hover:scale-105"
+                >
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-xl font-semibold">{componente.nome}</h3>
-                      <p className="text-sm text-muted-foreground h-16">{componente.descricao}</p>
+                      <p className="text-sm text-muted-foreground">{componente.descricao}</p>
                     </div>
                     {componente.pasta && (
                       <Badge variant="outline" className="text-xs">
@@ -193,44 +221,45 @@ export default function Componentes() {
                       {new Date(componente.ultimaModificacao).toLocaleDateString()}
                     </Badge>
                   </div>
-                  <Tabs defaultValue="preview" className="w-full h-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="preview">Visualização</TabsTrigger>
-                      <TabsTrigger value="code">Código</TabsTrigger>
-                      <TabsTrigger value="structure">Estrutura</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="preview" className="mt-4">
-                      <div className="min-h-[300px] p-4 flex items-center justify-center border rounded-md">
-                        {componente.componente}
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="code" className="mt-4">
-                      <div className="relative">
-                        <ScrollArea className="h-[300px] w-full rounded-md border">
-                          <div className="p-4">{renderCode(componente.codigo)}</div>
-                        </ScrollArea>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="absolute top-2 right-2"
-                          onClick={(e) => {
-                            e.preventDefault() // Previne a navegação para a página de detalhes
-                            copiarCodigo(JSON.stringify(componente.codigo, null, 2), componente.nome)
-                          }}
-                        >
-                          {copiado === componente.nome ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                        </Button>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="structure" className="mt-4">
-                      <ScrollArea className="h-[300px] w-full rounded-md border">
-                        <div className="p-4">{renderFileTree(componente.codigo)}</div>
+                </Link>
+                <Tabs defaultValue="preview" className="w-full h-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="preview">Visualização</TabsTrigger>
+                    <TabsTrigger value="code">Código</TabsTrigger>
+                    <TabsTrigger value="structure">Estrutura</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="preview" className="mt-4">
+                    <div className="min-h-[300px] p-4 flex items-center justify-center border rounded-md">
+                    <ExtComponentRenderer extCode={componente.componente as string} />
+                      {/* {componente.componente} */}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="code" className="mt-4">
+                    <div className="relative">
+                      <ScrollArea className="h-[300px] rounded-md border">
+                        <div className="p-4">{renderCode(componente.codigo)}</div>
                       </ScrollArea>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            </Link>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="absolute top-2 right-2"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          copiarCodigo(JSON.stringify(componente.codigo, null, 2), componente.nome)
+                        }}
+                      >
+                        {copiado === componente.nome ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="structure" className="mt-4">
+                    <ScrollArea className="h-[300px] w-full rounded-md border">
+                      <div className="p-4">{renderFileTree(componente.codigo)}</div>
+                    </ScrollArea>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
           ))}
         </div>
 

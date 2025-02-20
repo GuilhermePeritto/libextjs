@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main className="mx-auto max-w-3xl py-5">
+    <main className="mx-auto max-w-3xl">
       <h1 className="mb-6 text-4xl font-bold">Bem-vindo à Nossa Documentação</h1>
       <p className="mb-4">
         Este é um lindo site de documentação minimalista construído com Next.js, Tailwind CSS e componentes shadcn/ui.

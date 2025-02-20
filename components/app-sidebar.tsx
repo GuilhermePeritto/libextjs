@@ -1,12 +1,28 @@
 "use client"
-import { GalleryVerticalEnd, Moon, Search, Sun } from "lucide-react"
+import {
+  BookOpen,
+  ChevronDown,
+  FileText,
+  GalleryVerticalEnd,
+  LogOut,
+  Moon,
+  Puzzle,
+  Rocket,
+  Search,
+  Shield,
+  Sun,
+  User,
+} from "lucide-react"
 import { useTheme } from "next-themes"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
 import {
   Sidebar,
   SidebarContent,
@@ -18,30 +34,25 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
 const navItems = [
-  { title: "Introdução", url: "/" },
-  { title: "Começando", url: "/getting-started" },
-  { title: "Componentes", url: "/components" },
-  { title: "Referência da API", url: "/api-reference" },
-  { title: "Documentação", url: "/documentation" },
-  { title: "Permissões", url: "/permissions" },
+  { title: "Introdução", url: "/", icon: BookOpen },
+  { title: "Começando", url: "/getting-started", icon: Rocket },
+  { title: "Componentes", url: "/components", icon: Puzzle },
+  { title: "Documentação", url: "/documentation", icon: FileText },
+  { title: "Referência da API", url: "/api-reference", icon: Search },
+  { title: "Permissões", url: "/permissions", icon: Shield },
 ]
 
 export default function AppSidebar() {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
-
-  // Simule um usuário logado
-  const user = {
-    name: "John Doe",
-    email: "john@example.com",
-    avatar: "/placeholder.svg?height=32&width=32",
-  }
+  const { state } = useSidebar()
 
   return (
-    <Sidebar className="login-gradient text-white" style={{
+    <Sidebar collapsible="icon" className="login-gradient text-white" style={{
       background: "linear-gradient(to bottom,#6051e6 6%, #5966e7 25%, #4f81e9 55%, #499bea 69%, #43a5eb 83%, #3bbeec 99%)",
     }}>
       <SidebarHeader>
@@ -60,7 +71,7 @@ export default function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <form>
+        <form className={state === "collapsed" ? "hidden" : ""}>
           <SidebarGroup className="py-0">
             <SidebarGroupContent className="relative">
               <Label htmlFor="search" className="sr-only">
@@ -89,7 +100,10 @@ export default function AppSidebar() {
                       pathname === item.url ? "bg-white/20 text-white" : ""
                     }`}
                   >
-                    <Link href={item.url}>{item.title}</Link>
+                    <Link href={item.url}>
+                      <item.icon className="mr-2 h-4 w-4" />
+                      <span>{item.title}</span>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -97,18 +111,51 @@ export default function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
       <SidebarFooter className="space-y-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start ${state === "collapsed" ? "px-0" : "px-2"} text-white/80 hover:text-white hover:bg-white/10`}
+            >
+              <Avatar className="h-8 w-8 ">
+                <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User avatar" />
+                <AvatarFallback>U</AvatarFallback>
+              </Avatar>
+              <span className={state === "collapsed" ? "sr-only" : ""}>Usuário</span>
+              <ChevronDown className={`ml-auto h-4 w-4 ${state === "collapsed" ? "hidden" : ""}`} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link href="/profile">
+                <User className="mr-2 h-4 w-4" />
+                <span>Perfil</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              localStorage.removeItem("user")
+              window.location.reload()
+            }}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sair</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Separator className="bg-white/20" />
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setTheme(theme === "light" ? "dark" : "light")}
           className="w-full justify-start px-2 text-white/80 hover:text-white hover:bg-white/10"
         >
-          {theme === "light" ? <Moon className="h-4 w-4 mr-2" /> : <Sun className="h-4 w-4 mr-2" />}
-          {theme === "light" ? "Modo Escuro" : "Modo Claro"}
+          {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          <span className={state === "collapsed" ? "sr-only" : "ml-2"}>
+            {theme === "light" ? "Modo Escuro" : "Modo Claro"}
+          </span>
         </Button>
       </SidebarFooter>
     </Sidebar>
   )
 }
-

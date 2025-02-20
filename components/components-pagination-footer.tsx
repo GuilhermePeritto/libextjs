@@ -1,4 +1,6 @@
+
 import { Button } from "@/components/ui/button"
+import { useSidebar } from "@/components/ui/sidebar"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 interface ComponentsPaginationFooterProps {
@@ -18,9 +20,14 @@ export function ComponentsPaginationFooter({
   onItemsPerPageChange,
   totalItems,
 }: ComponentsPaginationFooterProps) {
+  const { state } = useSidebar()
+  const isSidebarCollapsed = state === "collapsed"
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t">
-      <div className="container mx-auto py-4 px-4 flex justify-between items-center">
+    <div
+      className={`fixed bottom-0 ${isSidebarCollapsed ? "left-[3rem]" : "left-[16rem]"} right-0 bg-background border-t transition-all duration-300`}
+    >
+      <div className="container mx-auto py-4 px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Itens por página:</span>
           <select
@@ -72,4 +79,3 @@ export function ComponentsPaginationFooter({
     </div>
   )
 }
-

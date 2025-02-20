@@ -3,8 +3,9 @@
 import type React from "react"
 
 import AppSidebar from "@/components/app-sidebar"
+import { AppBreadcrumb } from "@/components/breadcrumb"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { ThemeProvider } from "next-themes"
 import { Inter } from "next/font/google"
 import { usePathname, useRouter } from "next/navigation"
@@ -43,20 +44,27 @@ export default function RootLayout({
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${inter.className} antialiased overflow-hidden`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {isAuthenticated ? (
-            <SidebarProvider>
-              <AppSidebar />
-              <SidebarTrigger className="ml-3 mt-3" />
-              <ScrollArea className="h-screen flex-1 px-8 pt-10">
-                <ScrollBar />
-                <main className="flex-1 px-8">
-                  {children}
-                </main>
-              </ScrollArea>
-            </SidebarProvider>
-          ) : (
-            children
-          )}
+          <SidebarProvider>
+            {isAuthenticated ? (
+              <div className="flex h-screen w-screen">
+                <AppSidebar />
+                <SidebarInset className="flex-1 flex flex-col">
+                  <header className="flex items-center h-16 px-4 border-b">
+                    <div className="flex items-center">
+                    <SidebarTrigger />
+                    <AppBreadcrumb />
+                    </div>
+                  </header>
+                  <ScrollArea className="flex-1 h-screen">
+                    <ScrollBar />
+                    <main className="p-4">{children}</main>
+                  </ScrollArea>
+                </SidebarInset>
+              </div>
+            ) : (
+              children
+            )}
+          </SidebarProvider>
           <Toaster />
         </ThemeProvider>
       </body>

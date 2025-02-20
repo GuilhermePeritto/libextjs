@@ -1,12 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { toast } from "sonner"
-import { usePermissions } from "@/hooks/use-permissions"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -15,11 +13,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { usePermissions } from "@/hooks/use-permissions"
+import { Plus } from "lucide-react"
+import { useState } from "react"
+import { toast } from "sonner"
 
 interface PermissionGroup {
   id: string
@@ -176,7 +177,10 @@ export default function PermissionsPage() {
         <h1 className="text-4xl font-bold">Grupos de Permissões</h1>
         <Dialog>
           <DialogTrigger asChild>
-            <Button>Novo Grupo</Button>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Grupo
+            </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -200,7 +204,10 @@ export default function PermissionsPage() {
                   onChange={(e) => setNewGroup({ ...newGroup, description: e.target.value })}
                 />
               </div>
-              <Button onClick={handleCreateGroup}>Criar Grupo</Button>
+              <Button onClick={handleCreateGroup}>
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Grupo
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
