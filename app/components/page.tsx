@@ -1,7 +1,7 @@
 "use client"
 
 import { ComponentsPaginationFooter } from "@/components/components-pagination-footer"
-import { ExtComponentRenderer } from "@/components/ext-component-renderer"
+import { ExtComponent } from "@/components/ext-component"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -183,9 +183,8 @@ export default function Componentes() {
 
       <div className="space-y-8">
         <div
-          className={`grid gap-6 ${
-            modoVisualizacao === "grade" ? "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3" : "grid-cols-1"
-          }`}
+          className={`grid gap-6 ${modoVisualizacao === "grade" ? "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3" : "grid-cols-1"
+            }`}
         >
           {paginatedComponents.map((componente, index) => (
             <Card
@@ -230,8 +229,10 @@ export default function Componentes() {
                   </TabsList>
                   <TabsContent value="preview" className="mt-4">
                     <div className="min-h-[300px] p-4 flex items-center justify-center border rounded-md">
-                    <ExtComponentRenderer extCode={componente.componente as string} />
-                      {/* {componente.componente} */}
+                      <ExtComponent
+                        componentDefinition={componente.componente?.toString()}
+                        componentUsage={componente.comoUsar}
+                      />
                     </div>
                   </TabsContent>
                   <TabsContent value="code" className="mt-4">

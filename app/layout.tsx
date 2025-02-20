@@ -6,6 +6,7 @@ import AppSidebar from "@/components/app-sidebar"
 import { AppBreadcrumb } from "@/components/breadcrumb"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { ExtProvider } from "@/contexts/ext-context"
 import { ThemeProvider } from "next-themes"
 import { Inter } from "next/font/google"
 import { usePathname, useRouter } from "next/navigation"
@@ -57,7 +58,9 @@ export default function RootLayout({
                   </header>
                   <ScrollArea className="flex-1 h-screen">
                     <ScrollBar />
+                    <ExtProvider>
                     <main className="p-4">{children}</main>
+                    </ExtProvider>
                   </ScrollArea>
                 </SidebarInset>
               </div>

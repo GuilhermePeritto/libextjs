@@ -1,10 +1,5 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { User } from "lucide-react"
-import type React from "react"
 
 export interface ComponentFile {
   name: string
@@ -18,8 +13,9 @@ export interface ComponentFolder {
 
 export interface Componente {
   nome: string
-  descricao: string
-  componente: React.ReactNode | string
+  descricao: string,
+  comoUsar: string
+  componente: string
   codigo: ComponentFile | ComponentFolder
   autor: string
   ultimaModificacao: string
@@ -32,79 +28,212 @@ export interface Componente {
 
 export const componentesIniciais: Componente[] = [
   {
-    nome: "Botão Ext",
-    descricao: "Um botão estilizado para uso em aplicações web.",
-    componente: (`Ext.create('Ext.Button', {
-      text: 'Click mess',
-      renderTo: Ext.getBody(),
-      handler: function () {
-        console.log('Button clicked');
-      }
-    })
-    `),
-    codigo: {
-      name: "Button.jsx",
-      content: `<Button variant="primary" size="md" onClick={() => console.log('Clicado!')}>
-  Clique-me
-</Button>`,
+    nome: "Use button",
+    descricao: "Botão personalizado com ícone de carregamento.",
+    comoUsar: `{
+                xtype: 'use-button',
+                text: 'Teste dos guri',
+                listeners: {
+                    click: ($btn) => {
+                        Use.Msg.alert('Botão clicado!');
+                    }
+                }
+            }`,
+    componente: `Ext.define('Use.button.Button', {
+    extend: 'Ext.button.Button',
+    alias: 'widget.use-button',
+
+    perms: undefined,
+
+    /**
+     * @cfg {String}
+     * Tamanho do botão, pode ser "medium", "small", "large".
+     */
+    scale: 'medium',
+
+    /**
+     * Se o parametro noDisable estiver como false, o componente será desabilitado na ação de visualizar, se true o componente continua ativo.
+     */
+    noDisable: false,
+
+    loadingIconCls: 'icone-loader-buttons-16x16',
+
+    initComponent: function () {
+        var me = this;
+
+        me.callParent();
+
+        me.on('afterrender', function() {
+            if (this.automatedTestId) {
+                if ( me.btnEl ) {
+                    me.btnEl.dom.setAttribute(this.automatedTestIdName, this.automatedTestId);
+                }
+            }
+        });
+
+        me.on({
+            render: {
+                fn: me.onRenderButton,
+                scope: me
+            }
+        });
     },
-    autor: "John Doe",
+
+    onRenderButton: function (_this) {
+        var me = this;
+        _this.getEl().on({
+
+            //Colocado o evento keydown no Ext.dom.Element
+            keydown: {
+                scope: me,
+                fn: me.onKeyDownButton
+            }
+
+        });
+    },
+
+    onKeyDownButton: function (e) {
+        this.fireEvent('keydown', this, e);
+    },
+
+    config: {
+        isLoading: false
+    },
+
+    setIsLoading: function(value) {
+        var me = this;
+
+        if(!me.rendered) return;
+
+        if ( !me.defaultIconCls ) {
+            me.defaultIconCls = me.iconCls;
+        }
+
+        me.callParent(arguments);
+
+        me.setDisabled(value);
+
+        me.removeCls('x-btn-disabled');
+
+        me.setIconCls(value ? me.loadingIconCls : me.defaultIconCls);
+    }
+});
+    `,
+    codigo: {
+      name: "UseButton.js",
+      content: `Ext.define('Use.button.Button', {
+        extend: 'Ext.button.Button',
+        alias: 'widget.use-button',
+    
+        perms: undefined,
+    
+        /**
+         * @cfg {String}
+         * Tamanho do botão, pode ser "medium", "small", "large".
+         */
+        scale: 'medium',
+    
+        /**
+         * Se o parametro noDisable estiver como false, o componente será desabilitado na ação de visualizar, se true o componente continua ativo.
+         */
+        noDisable: false,
+    
+        loadingIconCls: 'icone-loader-buttons-16x16',
+    
+        initComponent: function () {
+            var me = this;
+    
+            me.callParent();
+    
+            me.on('afterrender', function() {
+                if (this.automatedTestId) {
+                    if ( me.btnEl ) {
+                        me.btnEl.dom.setAttribute(this.automatedTestIdName, this.automatedTestId);
+                    }
+                }
+            });
+    
+            me.on({
+                render: {
+                    fn: me.onRenderButton,
+                    scope: me
+                }
+            });
+        },
+    
+        onRenderButton: function (_this) {
+            var me = this;
+            _this.getEl().on({
+    
+                //Colocado o evento keydown no Ext.dom.Element
+                keydown: {
+                    scope: me,
+                    fn: me.onKeyDownButton
+                }
+    
+            });
+        },
+    
+        onKeyDownButton: function (e) {
+            this.fireEvent('keydown', this, e);
+        },
+    
+        config: {
+            isLoading: false
+        },
+    
+        setIsLoading: function(value) {
+            var me = this;
+    
+            if(!me.rendered) return;
+    
+            if ( !me.defaultIconCls ) {
+                me.defaultIconCls = me.iconCls;
+            }
+    
+            me.callParent(arguments);
+    
+            me.setDisabled(value);
+    
+            me.removeCls('x-btn-disabled');
+    
+            me.setIconCls(value ? me.loadingIconCls : me.defaultIconCls);
+        }
+    });
+        `
+    },
+    autor: "Useall Core",
     ultimaModificacao: "2024-02-19",
     tamanho: "pequeno",
     propriedades: [
-      { nome: "variant", tipo: "string", descricao: "Variante do botão", padrao: "default" },
-      { nome: "size", tipo: "string", descricao: "Tamanho do botão", padrao: "md" },
-      { nome: "disabled", tipo: "boolean", descricao: "Define se o botão está desabilitado", padrao: "false" },
-      { nome: "loading", tipo: "boolean", descricao: "Exibe um indicador de carregamento", padrao: "false" },
-      {
-        nome: "fullWidth",
-        tipo: "boolean",
-        descricao: "Faz o botão ocupar toda a largura disponível",
-        padrao: "false",
-      },
+      { nome: "scale", tipo: "string", descricao: "Tamanho do botão, pode ser 'medium', 'small', 'large'" },
+      { nome: "noDisable", tipo: "boolean", descricao: "Se o parametro noDisable estiver como false, o componente será desabilitado na ação de visualizar, se true o componente continua ativo." },
+      { nome: "loadingIconCls", tipo: "string", descricao: "Classe do ícone de carregamento" },
+      { nome: "isLoading", tipo: "boolean", descricao: "Define se o botão está em estado de carregamento" },
     ],
     metodos: [
       {
-        nome: "onClick",
-        parametros: "event: React.MouseEvent<HTMLButtonElement>",
+        nome: "setIsLoading",
+        parametros: "value: boolean",
         retorno: "void",
-        descricao: "Função chamada quando o botão é clicado",
-      },
-      {
-        nome: "onFocus",
-        parametros: "event: React.FocusEvent<HTMLButtonElement>",
-        retorno: "void",
-        descricao: "Função chamada quando o botão recebe foco",
-      },
-      {
-        nome: "onBlur",
-        parametros: "event: React.FocusEvent<HTMLButtonElement>",
-        retorno: "void",
-        descricao: "Função chamada quando o botão perde foco",
-      },
-      {
-        nome: "onMouseEnter",
-        parametros: "event: React.MouseEvent<HTMLButtonElement>",
-        retorno: "void",
-        descricao: "Função chamada quando o mouse entra na área do botão",
-      },
-      {
-        nome: "onMouseLeave",
-        parametros: "event: React.MouseEvent<HTMLButtonElement>",
-        retorno: "void",
-        descricao: "Função chamada quando o mouse sai da área do botão",
+        descricao: "Define se o botão está em estado de carregamento",
       },
     ],
     exemplos: [
       {
-        titulo: "Botão Primário Padrão",
-        codigo: `<Button variant="primary">Botão Primário</Button>`,
+        titulo: "Botão com Ícone de Carregamento",
+        codigo: `{
+          xtype: 'use-button',
+          text: 'Teste dos guri',
+          listeners: {
+              click: ($btn) => {
+                  Use.Msg.alert('Botão clicado!');
+              }
+          }
+      }`,
       },
-      {
-        titulo: "Botão Desabilitado",
-        codigo: `<Button variant="primary" disabled>Botão Desabilitado</Button>`,
-      }]
-  }, {
+      ]
+  }/* , {
     nome: "Botão Primário",
     descricao: "Um componente de botão versátil e personalizável.",
     componente: <Button>Clique-me</Button>,
@@ -1003,7 +1132,7 @@ function HomePage() {
 }`,
       },
     ],
-  },
+  }, */
 ]
 
 export default componentesIniciais
