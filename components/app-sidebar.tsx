@@ -1,5 +1,5 @@
 "use client"
-import { GalleryVerticalEnd, Moon, Search, Sun, User } from "lucide-react"
+import { GalleryVerticalEnd, Moon, Search, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -32,6 +32,13 @@ const navItems = [
 export default function AppSidebar() {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
+
+  // Simule um usuário logado
+  const user = {
+    name: "John Doe",
+    email: "john@example.com",
+    avatar: "/placeholder.svg?height=32&width=32",
+  }
 
   return (
     <Sidebar className="login-gradient text-white" style={{
@@ -91,17 +98,6 @@ export default function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="space-y-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          asChild
-          className="w-full justify-start px-2 text-white/80 hover:text-white hover:bg-white/10"
-        >
-          <Link href="/profile">
-            <User className="h-4 w-4 mr-2" />
-            Meu Perfil
-          </Link>
-        </Button>
         <Button
           variant="ghost"
           size="icon"

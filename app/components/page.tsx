@@ -1,5 +1,6 @@
 "use client"
 
+import { ComponentsPaginationFooter } from "@/components/components-pagination-footer"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,12 +16,12 @@ import {
   type Componente,
 } from "@/data/componentes-iniciais"
 import { usePermissions } from "@/hooks/use-permissions"
-import { Check, ChevronLeft, ChevronRight, Copy, File, Folder, Grid, List, Plus, Search } from "lucide-react"
+import { Check, Copy, File, Folder, Grid, List, Plus, Search } from "lucide-react"
 import Link from "next/link"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism"
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { toast } from "sonner"
 
 // Função auxiliar para renderizar a estrutura de pastas
@@ -83,7 +84,7 @@ export default function Componentes() {
   const [componentes] = useState<Componente[]>(componentesIniciais)
   const { hasPermission } = usePermissions()
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 6
+  const [itemsPerPage, setItemsPerPage] = useState(6)
   const [searchQuery, setSearchQuery] = useState("")
 
   const filteredComponents = useMemo(() => {
@@ -114,51 +115,58 @@ export default function Componentes() {
   }, [searchQuery])
 
   return (
-      <div className="container mx-auto pt-8 px-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-          <h1 className="text-4xl font-bold">Componentes</h1>
-          <div className="flex space-x-2 w-full sm:w-auto">
-            <div className="relative flex-1 sm:w-80">
-              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome, descrição, pasta ou autor..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            <Toggle
-              pressed={modoVisualizacao === "grade"}
-              onPressedChange={() => setModoVisualizacao(modoVisualizacao === "grade" ? "lista" : "grade")}
-            >
-              {modoVisualizacao === "grade" ? <Grid className="h-4 w-4" /> : <List className="h-4 w-4" />}
-            </Toggle>
-            {hasPermission("components", "create") && (
-              <Button asChild>
-                <Link href="/components/new">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Componente
-                </Link>
-              </Button>
-            )}
+    <div className="container mx-auto pt-8 px-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <h1 className="text-4xl font-bold">Componentes</h1>
+        <div className="flex space-x-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-80">
+            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome, descrição, pasta ou autor..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8"
+            />
           </div>
-        </div>
-
-        {searchQuery && (
-          <div className="mb-4">
-            <p className="text-sm text-muted-foreground">{filteredComponents.length} resultado(s) encontrado(s)</p>
-          </div>
-        )}
-
-        <div className="space-y-8">
-          <div
-            className={`grid gap-6 ${modoVisualizacao === "grade" ? "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3" : "grid-cols-1"
-              }`}
+          <Toggle
+            pressed={modoVisualizacao === "grade"}
+            onPressedChange={() => setModoVisualizacao(modoVisualizacao === "grade" ? "lista" : "grade")}
           >
-            {paginatedComponents.map((componente, index) => (
+            {modoVisualizacao === "grade" ? <Grid className="h-4 w-4" /> : <List className="h-4 w-4" />}
+          </Toggle>
+          {hasPermission("components", "create") && (
+            <Button asChild>
+              <Link href="/components/new">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Componente
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {searchQuery && (
+        <div className="mb-4">
+          <p className="text-sm text-muted-foreground">{filteredComponents.length} resultado(s) encontrado(s)</p>
+        </div>
+      )}
+
+      <div className="space-y-8">
+        <div
+          className={`grid gap-6 ${
+            modoVisualizacao === "grade" ? "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3" : "grid-cols-1"
+          }`}
+        >
+          {paginatedComponents.map((componente, index) => (
+            <Link
+              href={`/components/${encodeURIComponent(componente.nome)}`}
+              key={index}
+              className="block transition-transform hover:scale-105"
+            >
               <Card
-                key={index}
-                className={`flex flex-col h-full ${componente.tamanho === "largo" ? "lg:col-span-2 xl:col-span-3" : ""}`}
+                className={`flex flex-col h-full ${
+                  componente.tamanho === "largo" ? "lg:col-span-2 xl:col-span-3" : ""
+                }`}
               >
                 <CardContent className="flex-grow p-6">
                   <div className="flex justify-between items-start mb-4">
@@ -205,7 +213,10 @@ export default function Componentes() {
                           variant="outline"
                           size="icon"
                           className="absolute top-2 right-2"
-                          onClick={() => copiarCodigo(JSON.stringify(componente.codigo, null, 2), componente.nome)}
+                          onClick={(e) => {
+                            e.preventDefault() // Previne a navegação para a página de detalhes
+                            copiarCodigo(JSON.stringify(componente.codigo, null, 2), componente.nome)
+                          }}
                         >
                           {copiado === componente.nome ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                         </Button>
@@ -219,43 +230,20 @@ export default function Componentes() {
                   </Tabs>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-8">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-2">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="icon"
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </Button>
-                ))}
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+            </Link>
+          ))}
         </div>
+
+        <ComponentsPaginationFooter
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={setItemsPerPage}
+          totalItems={filteredComponents.length}
+        />
       </div>
+    </div>
   )
 }
 

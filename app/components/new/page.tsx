@@ -33,6 +33,9 @@ interface NovoComponente {
   autor: string
   tamanho: "normal" | "largo"
   preview: boolean
+  metodos: { nome: string; descricao: string }[]
+  propriedades: { nome: string; tipo: string; descricao: string }[]
+  exemplos: { titulo: string; codigo: string }[]
 }
 
 export default function NewComponent() {
@@ -45,6 +48,9 @@ export default function NewComponent() {
     autor: "",
     tamanho: "normal",
     preview: true,
+    metodos: [],
+    propriedades: [],
+    exemplos: [],
   })
 
   const handleAddFile = (path: string[] = []) => {
@@ -210,6 +216,8 @@ export default function NewComponent() {
               <TabsList>
                 <TabsTrigger value="basic">Informações Básicas</TabsTrigger>
                 <TabsTrigger value="code">Código</TabsTrigger>
+                <TabsTrigger value="api">API</TabsTrigger>
+                <TabsTrigger value="examples">Exemplos</TabsTrigger>
                 <TabsTrigger value="settings">Configurações</TabsTrigger>
               </TabsList>
 
@@ -260,6 +268,161 @@ export default function NewComponent() {
                       </CardContent>
                     </Card>
                   </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="api">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Métodos</Label>
+                    {novoComponente.metodos.map((metodo, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Input
+                          placeholder="Nome do método"
+                          value={metodo.nome}
+                          onChange={(e) => {
+                            const newMetodos = [...novoComponente.metodos]
+                            newMetodos[index].nome = e.target.value
+                            setNovoComponente({ ...novoComponente, metodos: newMetodos })
+                          }}
+                        />
+                        <Input
+                          placeholder="Descrição"
+                          value={metodo.descricao}
+                          onChange={(e) => {
+                            const newMetodos = [...novoComponente.metodos]
+                            newMetodos[index].descricao = e.target.value
+                            setNovoComponente({ ...novoComponente, metodos: newMetodos })
+                          }}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const newMetodos = novoComponente.metodos.filter((_, i) => i !== index)
+                            setNovoComponente({ ...novoComponente, metodos: newMetodos })
+                          }}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        setNovoComponente({
+                          ...novoComponente,
+                          metodos: [...novoComponente.metodos, { nome: "", descricao: "" }],
+                        })
+                      }
+                    >
+                      <Plus className="h-4 w-4 mr-2" /> Adicionar Método
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Propriedades</Label>
+                    {novoComponente.propriedades.map((prop, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Input
+                          placeholder="Nome da propriedade"
+                          value={prop.nome}
+                          onChange={(e) => {
+                            const newProps = [...novoComponente.propriedades]
+                            newProps[index].nome = e.target.value
+                            setNovoComponente({ ...novoComponente, propriedades: newProps })
+                          }}
+                        />
+                        <Input
+                          placeholder="Tipo"
+                          value={prop.tipo}
+                          onChange={(e) => {
+                            const newProps = [...novoComponente.propriedades]
+                            newProps[index].tipo = e.target.value
+                            setNovoComponente({ ...novoComponente, propriedades: newProps })
+                          }}
+                        />
+                        <Input
+                          placeholder="Descrição"
+                          value={prop.descricao}
+                          onChange={(e) => {
+                            const newProps = [...novoComponente.propriedades]
+                            newProps[index].descricao = e.target.value
+                            setNovoComponente({ ...novoComponente, propriedades: newProps })
+                          }}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const newProps = novoComponente.propriedades.filter((_, i) => i !== index)
+                            setNovoComponente({ ...novoComponente, propriedades: newProps })
+                          }}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        setNovoComponente({
+                          ...novoComponente,
+                          propriedades: [...novoComponente.propriedades, { nome: "", tipo: "", descricao: "" }],
+                        })
+                      }
+                    >
+                      <Plus className="h-4 w-4 mr-2" /> Adicionar Propriedade
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="examples">
+                <div className="space-y-4">
+                  <Label>Exemplos de Uso</Label>
+                  {novoComponente.exemplos.map((exemplo, index) => (
+                    <div key={index} className="space-y-2">
+                      <Input
+                        placeholder="Título do exemplo"
+                        value={exemplo.titulo}
+                        onChange={(e) => {
+                          const newExemplos = [...novoComponente.exemplos]
+                          newExemplos[index].titulo = e.target.value
+                          setNovoComponente({ ...novoComponente, exemplos: newExemplos })
+                        }}
+                      />
+                      <Textarea
+                        placeholder="Código do exemplo"
+                        value={exemplo.codigo}
+                        onChange={(e) => {
+                          const newExemplos = [...novoComponente.exemplos]
+                          newExemplos[index].codigo = e.target.value
+                          setNovoComponente({ ...novoComponente, exemplos: newExemplos })
+                        }}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const newExemplos = novoComponente.exemplos.filter((_, i) => i !== index)
+                          setNovoComponente({ ...novoComponente, exemplos: newExemplos })
+                        }}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      setNovoComponente({
+                        ...novoComponente,
+                        exemplos: [...novoComponente.exemplos, { titulo: "", codigo: "" }],
+                      })
+                    }
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> Adicionar Exemplo
+                  </Button>
                 </div>
               </TabsContent>
 
