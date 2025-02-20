@@ -2,26 +2,163 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 98%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 94%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 3%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 3%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* Add horizontal scrolling for code blocks */
+pre {
+  overflow-x: auto;
+  white-space: pre;
+  word-wrap: normal;
+}
+
+.code-content {
+  min-width: 100%;
+  overflow-x: auto;
+}
+
+/* Component card sizes */
+.card-col-span-2 {
+  @apply col-span-2;
+}
+
+.syntax-highlighter {
+  font-family: "Fira Code", monospace;
+}
+
+.syntax-highlighter .token.comment,
+.syntax-highlighter .token.prolog,
+.syntax-highlighter .token.doctype,
+.syntax-highlighter .token.cdata {
+  color: #5c6370;
+  font-style: italic;
+}
+
+.syntax-highlighter .token.punctuation {
+  color: #abb2bf;
+}
+
+.syntax-highlighter .token.selector,
+.syntax-highlighter .token.tag {
+  color: #e06c75;
+}
+
+.syntax-highlighter .token.property,
+.syntax-highlighter .token.boolean,
+.syntax-highlighter .token.number,
+.syntax-highlighter .token.constant,
+.syntax-highlighter .token.symbol,
+.syntax-highlighter .token.attr-name,
+.syntax-highlighter .token.deleted {
+  color: #d19a66;
+}
+
+.syntax-highlighter .token.string,
+.syntax-highlighter .token.char,
+.syntax-highlighter .token.attr-value,
+.syntax-highlighter .token.builtin,
+.syntax-highlighter .token.inserted {
+  color: #98c379;
+}
+
+.syntax-highlighter .token.operator,
+.syntax-highlighter .token.entity,
+.syntax-highlighter .token.url,
+.syntax-highlighter .language-css .token.string,
+.syntax-highlighter .style .token.string {
+  color: #56b6c2;
+}
+
+.syntax-highlighter .token.atrule,
+.syntax-highlighter .token.keyword {
+  color: #c678dd;
+}
+
+.syntax-highlighter .token.function {
+  color: #61afef;
+}
+
+.syntax-highlighter .token.regex,
+.syntax-highlighter .token.important,
+.syntax-highlighter .token.variable {
+  color: #c678dd;
+}
+
+.syntax-highlighter .token.important,
+.syntax-highlighter .token.bold {
+  font-weight: bold;
+}
+
+.syntax-highlighter .token.italic {
+  font-style: italic;
 }
