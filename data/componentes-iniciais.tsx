@@ -31,93 +31,10 @@ export const componentesIniciais: Componente[] = [
     nome: "Use button",
     descricao: "Botão personalizado com ícone de carregamento.",
     comoUsar: `{
-                xtype: 'use-button',
-                text: 'Teste dos guri',
-                listeners: {
-                    click: ($btn) => {
-                        Use.Msg.alert('Botão clicado!');
-                    }
-                }
+                xtype: 'use-searchfield-usuario',
+                fieldLabel: 'Usuário',
             }`,
-    componente: `Ext.define('Use.button.Button', {
-    extend: 'Ext.button.Button',
-    alias: 'widget.use-button',
-
-    perms: undefined,
-
-    /**
-     * @cfg {String}
-     * Tamanho do botão, pode ser "medium", "small", "large".
-     */
-    scale: 'medium',
-
-    /**
-     * Se o parametro noDisable estiver como false, o componente será desabilitado na ação de visualizar, se true o componente continua ativo.
-     */
-    noDisable: false,
-
-    loadingIconCls: 'icone-loader-buttons-16x16',
-
-    initComponent: function () {
-        var me = this;
-
-        me.callParent();
-
-        me.on('afterrender', function() {
-            if (this.automatedTestId) {
-                if ( me.btnEl ) {
-                    me.btnEl.dom.setAttribute(this.automatedTestIdName, this.automatedTestId);
-                }
-            }
-        });
-
-        me.on({
-            render: {
-                fn: me.onRenderButton,
-                scope: me
-            }
-        });
-    },
-
-    onRenderButton: function (_this) {
-        var me = this;
-        _this.getEl().on({
-
-            //Colocado o evento keydown no Ext.dom.Element
-            keydown: {
-                scope: me,
-                fn: me.onKeyDownButton
-            }
-
-        });
-    },
-
-    onKeyDownButton: function (e) {
-        this.fireEvent('keydown', this, e);
-    },
-
-    config: {
-        isLoading: false
-    },
-
-    setIsLoading: function(value) {
-        var me = this;
-
-        if(!me.rendered) return;
-
-        if ( !me.defaultIconCls ) {
-            me.defaultIconCls = me.iconCls;
-        }
-
-        me.callParent(arguments);
-
-        me.setDisabled(value);
-
-        me.removeCls('x-btn-disabled');
-
-        me.setIconCls(value ? me.loadingIconCls : me.defaultIconCls);
-    }
-});
+    componente: `
     `,
     codigo: {
       name: "UseButton.js",
