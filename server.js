@@ -74,13 +74,43 @@ function generateExtPage(componentDefinition, componentUsage) {
         ${componentDefinition || ''}
       </script>
 
+      <!-- Estilos para centralizar o componente -->
+      <style>
+        html, body {
+          margin: 0;
+          padding: 0;
+          height: 100%;
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background-color: #f0f0f0; /* Cor de fundo opcional */
+        }
+
+        #extjs-container {
+          width: 100%; /* Largura do contêiner do componente */
+          height: 100%; /* Altura do contêiner do componente */
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background-color: white; /* Cor de fundo do contêiner */
+        }
+      </style>
+
       <!-- Renderizar o componente ExtJS -->
       <script>
         Ext.onReady(function() {
           try {
             const componentConfig = ${componentUsage};
             const component = Ext.create(componentConfig);
-            component.render(Ext.getBody());
+
+            // Criar um contêiner para centralizar o componente
+            const container = Ext.create('Ext.container.Container', {
+              id: 'extjs-container',
+              layout: 'vbox', // Layout para ajustar o componente ao contêiner
+              renderTo: Ext.getBody(),
+              items: [component] // Adicionar o componente ao contêiner
+            });
           } catch (error) {
             console.error("Erro ao criar o componente ExtJS:", error);
           }
