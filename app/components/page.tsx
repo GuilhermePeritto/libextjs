@@ -227,8 +227,8 @@ export default function Componentes() {
                     <TabsTrigger value="code">Código</TabsTrigger>
                     <TabsTrigger value="structure">Estrutura</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="preview" className="mt-4">
-                    <div className="min-h-[300px] p-4 flex items-center justify-center border rounded-md">
+                  <TabsContent value="preview" className="mt-4 min-h-[20rem]">
+                    <div className="h-full w-full flex items-center justify-center border rounded-md">
                       <ExtComponent
                         componentDefinition={componente.componente?.toString()}
                         componentUsage={componente.comoUsar}
@@ -237,7 +237,7 @@ export default function Componentes() {
                   </TabsContent>
                   <TabsContent value="code" className="mt-4">
                     <div className="relative">
-                      <ScrollArea className="h-[300px] rounded-md border">
+                      <ScrollArea className="h-[20rem] rounded-md border">
                         <div className="p-4">{renderCode(componente.codigo)}</div>
                       </ScrollArea>
                       <Button
@@ -254,7 +254,7 @@ export default function Componentes() {
                     </div>
                   </TabsContent>
                   <TabsContent value="structure" className="mt-4">
-                    <ScrollArea className="h-[300px] w-full rounded-md border">
+                    <ScrollArea className="h-[20rem] w-full rounded-md border">
                       <div className="p-4">{renderFileTree(componente.codigo)}</div>
                     </ScrollArea>
                   </TabsContent>

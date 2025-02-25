@@ -31,8 +31,8 @@ export const componentesIniciais: Componente[] = [
     nome: "Use button",
     descricao: "Botão personalizado com ícone de carregamento.",
     comoUsar: `{
-                xtype: 'use-button',
-                text: 'Usuário',
+                xtype: 'use-searchfield-usuario',
+                fieldLabel: 'Usuário',
             }`,
     componente: `
     `,
