@@ -15,68 +15,45 @@ interface ExtComponentProps {
 }
 
 export function ExtComponent({ className = "", onReady, onError, ...props }: ExtComponentProps) {
-    const { isExtLoaded, error: contextError } = useExt();
+    const { isExtLoaded, 
+        error: contextError,
+        temaExt,
+        temaExt1,
+        temaExt2,
+        temaExt3,
+        temaExt4 } = useExt();
     const { containerRef, error } = useExtComponent({ ...props, onReady, onError });
     const hostRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (hostRef.current && isExtLoaded) {
-            // Cria um container para o ExtJS no DOM global
-            const container = document.createElement("div");
-            container.style.width = "100%";
-            container.style.height = "100%";
-            container.classList.add("extjs-container"); // Adiciona uma classe ao container
-            hostRef.current.appendChild(container);
+            // Verifica se o elemento já possui um Shadow DOM
+            if (!hostRef.current.shadowRoot) {
+                // Cria um Shadow DOM para isolar completamente o componente
+                const shadowRoot = hostRef.current.attachShadow({ mode: "open" });
 
-            // Injeta o CSS do ExtJS no DOM global, mas com escopo limitado ao container
-            const style = document.createElement("style");
-            style.textContent = `
-        .extjs-container {
-          all: initial; /* Reseta estilos para evitar conflitos */
+                // Cria um container dentro do Shadow DOM
+                const container = document.createElement("div");
+                container.style.width = "100%";
+                container.style.height = "100%";
+                container.classList.add("extjs-container"); // Adiciona uma classe ao container
+                shadowRoot.appendChild(container);
+
+                // Adiciona os estilos dos temas ao Shadow DOM
+                if (temaExt) shadowRoot.appendChild(temaExt);
+                if (temaExt1) shadowRoot.appendChild(temaExt1);
+                if (temaExt2) shadowRoot.appendChild(temaExt2);
+                if (temaExt3) shadowRoot.appendChild(temaExt3);
+                if (temaExt4) shadowRoot.appendChild(temaExt4);
+
+                // Aponta o containerRef para o container no Shadow DOM
+                containerRef.current = container;
+            } else {
+                // Se o Shadow DOM já existe, apenas atualiza o containerRef
+                containerRef.current = hostRef.current.shadowRoot.querySelector(".extjs-container");
+            }
         }
-        .extjs-container * {
-          box-sizing: border-box; /* Garante que o box-sizing seja consistente */
-        }
-      `;
-            document.head.appendChild(style);
-
-            const temaExtUrlAll = 'https://desenvsb2.useall.com.br/servicos/resources/App-all.css?d=010119000000'
-            const temaExtUrl_1 = 'https://desenvsb2.useall.com.br/servicos/resources/App-all_1.css'
-            const temaExtUrl_2 = 'https://desenvsb2.useall.com.br/servicos/resources/App-all_2.css'
-            const temaExtUrl_3 = 'https://desenvsb2.useall.com.br/servicos/resources/App-all_3.css'
-            const temaExtUrl_4 = 'https://desenvsb2.useall.com.br/servicos/resources/App-all_4.css'
-
-
-            // Carrega o CSS do ExtJS
-            const temaExt = document.createElement("link");
-            temaExt.rel = "stylesheet";
-            temaExt.href = temaExtUrlAll || `https://cdn.sencha.com/ext/commercial/7.6.0/build/classic/theme-triton/resources/theme-triton-all.css`;
-            document.head.appendChild(temaExt);
-
-            const temaExt_1 = document.createElement("link");
-            temaExt_1.rel = "stylesheet";
-            temaExt_1.href = temaExtUrl_1
-            document.head.appendChild(temaExt_1);
-
-            const temaExt_2 = document.createElement("link");
-            temaExt_2.rel = "stylesheet";
-            temaExt_2.href = temaExtUrl_2
-            document.head.appendChild(temaExt_2);
-
-            const temaExt_3 = document.createElement("link");
-            temaExt_3.rel = "stylesheet";
-            temaExt_3.href = temaExtUrl_3
-            document.head.appendChild(temaExt_3);
-
-            const temaExt_4 = document.createElement("link");
-            temaExt_4.rel = "stylesheet";
-            temaExt_4.href = temaExtUrl_4
-            document.head.appendChild(temaExt_4);
-
-            // Aponta o containerRef para o container no DOM global
-            containerRef.current = container;
-        }
-    }, [isExtLoaded, containerRef]);
+    }, [isExtLoaded, containerRef, temaExt, temaExt1, temaExt2, temaExt3, temaExt4]);
 
     if (contextError || error) {
         return (

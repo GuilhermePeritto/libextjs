@@ -6,7 +6,8 @@ interface ExtComponentConfig {
   componentUsage?: string
   componentDefinition?: string
   xtype?: string
-  config?: any
+  config?: any,
+
 }
 
 interface UseExtComponentProps extends ExtComponentConfig {
@@ -104,5 +105,6 @@ export function useExtComponent({
     component: componentRef.current,
     error,
     isReady,
+
   }
 }

@@ -2,25 +2,26 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ExtComponent } from "@/components/ext-component"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
-import { ChevronLeft, Copy, Check, ExternalLink } from "lucide-react"
-import { toast } from "sonner"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   componentesIniciais,
   type Componente,
   type ComponentFile,
   type ComponentFolder,
 } from "@/data/componentes-iniciais"
+import { Check, ChevronLeft, Copy, ExternalLink } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
+import { toast } from "sonner"
 
 // Função auxiliar para renderizar o código
 const renderCode = (item: ComponentFile | ComponentFolder): React.ReactNode => {
@@ -120,7 +121,10 @@ export default function ComponenteDetalhes({ params }: { params: { id: string } 
             </TabsList>
             <TabsContent value="preview" className="mt-4">
               <div className="min-h-[300px] p-4 flex items-center justify-center border rounded-md">
-                {componente.componente}
+                <ExtComponent
+                  componentDefinition={componente.componente?.toString()}
+                  componentUsage={componente.comoUsar}
+                />
               </div>
             </TabsContent>
             <TabsContent value="code" className="mt-4">
