@@ -230,7 +230,7 @@ export default function Componentes() {
                   <TabsContent value="preview" className="mt-4 min-h-[20rem]">
                     <div className="h-full w-full flex items-center justify-center border rounded-md">
                       <ExtComponent
-                        componentDefinition={componente.componente?.toString()}
+                        componentDefinition={componente.componente}
                         componentUsage={componente.comoUsar}
                       />
                     </div>

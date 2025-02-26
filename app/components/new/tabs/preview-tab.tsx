@@ -1,6 +1,7 @@
 "use client"
 
 import { ExtComponent } from "@/components/ext-component"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface PreviewTabProps {
   componentDefinition: string
@@ -9,9 +10,11 @@ interface PreviewTabProps {
 
 export function PreviewTab({ componentDefinition, componentUsage }: PreviewTabProps) {
   return (
-    <div className="h-full p-4 flex items-center justify-center border rounded-md">
-      <ExtComponent componentDefinition={componentDefinition} componentUsage={componentUsage} />
-    </div>
+    <Card className="max-h-[calc(47vh) h-[calc(47vh) min-h-[calc(47vh)]">
+      <CardContent className="h-full pt-6">
+        <ExtComponent componentDefinition={componentDefinition} componentUsage={componentUsage} />
+      </CardContent>
+    </Card>
   )
 }
 

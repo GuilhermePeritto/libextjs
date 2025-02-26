@@ -3,12 +3,11 @@
 import type React from "react"
 
 import { Button } from "@/components/ui/button"
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu"
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { cn } from "@/lib/utils"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { FileTree } from "../file-explorer/file-tree"
 import { MonacoEditor } from "./monaco-editor"
 
@@ -18,6 +17,7 @@ interface FileNode {
   type: "file" | "folder"
   content?: string
   children?: FileNode[]
+  parentId?: string | null
 }
 
 interface CodeEditorContainerProps {
@@ -29,19 +29,26 @@ interface CodeEditorContainerProps {
 export function CodeEditorContainer({ initialFiles, onFilesChange, className }: CodeEditorContainerProps) {
   const [files, setFiles] = useState<FileNode[]>(initialFiles)
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null)
-  const [showNewFileDialog, setShowNewFileDialog] = useState(false)
-  const [newFileName, setNewFileName] = useState("")
   const [contextMenuTarget, setContextMenuTarget] = useState<FileNode | null>(null)
-  const [isRenaming, setIsRenaming] = useState(false)
-  const [newName, setNewName] = useState("")
+  const [dialogOpen, setDialogOpen] = useState<{
+    type: "new-file" | "new-folder" | "rename" | null
+    parentId: string | null
+  }>({ type: null, parentId: null })
+  const [inputValue, setInputValue] = useState("")
+
+  // Referência para evitar múltiplas atualizações de estado durante o redimensionamento
+  const isUpdatingRef = useRef(false)
 
   // Criar um arquivo padrão se não houver arquivos
   useEffect(() => {
-    if (files.length === 0) {
+    if (files.length === 0 && !isUpdatingRef.current) {
+      isUpdatingRef.current = true
+
       const defaultFile: FileNode = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: generateId(),
         name: "component.tsx",
         type: "file",
+        parentId: null,
         content: `import React from 'react';
 
 export interface ComponentProps {
@@ -59,11 +66,16 @@ export function Component({ ...props }: ComponentProps) {
 `,
       }
 
-      setFiles([defaultFile])
-      setSelectedFile(defaultFile)
-      onFilesChange([defaultFile])
+      // Usar setTimeout para evitar múltiplas atualizações de estado em um único ciclo de renderização
+      setTimeout(() => {
+        setFiles([defaultFile])
+        onFilesChange([defaultFile])
+        isUpdatingRef.current = false
+      }, 0)
     }
-  }, [files, onFilesChange])
+  }, [files.length, onFilesChange])
+
+  const generateId = () => Math.random().toString(36).substring(2, 11)
 
   const handleFileSelect = (file: FileNode) => {
     if (file.type === "file") {
@@ -71,91 +83,152 @@ export function Component({ ...props }: ComponentProps) {
     }
   }
 
-  const handleFileCreate = (parentId: string | null, type: "file" | "folder", name: string) => {
-    const newNode: FileNode = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: name,
-      type,
-      content: type === "file" ? "" : undefined,
-      children: type === "folder" ? [] : undefined,
-    }
-
-    const updateFiles = (nodes: FileNode[]): FileNode[] => {
-      if (!parentId) {
-        return [...nodes, newNode]
-      }
-
-      return nodes.map((node) => {
-        if (node.id === parentId && node.type === "folder") {
-          return {
-            ...node,
-            children: [...(node.children || []), newNode],
-          }
-        }
-        if (node.children) {
-          return {
-            ...node,
-            children: updateFiles(node.children),
-          }
-        }
-        return node
-      })
-    }
-
-    const updatedFiles = updateFiles(files)
-    setFiles(updatedFiles)
-    onFilesChange(updatedFiles)
+  const handleContextMenu = (e: React.MouseEvent, file: FileNode | null) => {
+    setContextMenuTarget(file)
   }
 
-  const handleFileDelete = (id: string) => {
-    const deleteFromFiles = (nodes: FileNode[]): FileNode[] => {
+  const handleCreateFile = (parentId: string | null, name = "novo-arquivo.tsx") => {
+    setDialogOpen({ type: "new-file", parentId })
+    setInputValue(name)
+  }
+
+  const handleCreateFolder = (parentId: string | null, name = "nova-pasta") => {
+    setDialogOpen({ type: "new-folder", parentId })
+    setInputValue(name)
+  }
+
+  const handleRename = (file: FileNode) => {
+    setDialogOpen({ type: "rename", parentId: file.parentId })
+    setContextMenuTarget(file)
+    setInputValue(file.name)
+  }
+
+  const handleDelete = (id: string) => {
+    // Função recursiva para encontrar e remover o nó
+    const removeNode = (nodes: FileNode[]): FileNode[] => {
       return nodes.filter((node) => {
+        // Se este é o nó a ser removido
         if (node.id === id) {
+          // Se o arquivo selecionado está sendo excluído, limpe a seleção
           if (selectedFile?.id === id) {
             setSelectedFile(null)
           }
           return false
         }
-        if (node.children) {
-          node.children = deleteFromFiles(node.children)
+
+        // Se este nó tem filhos, processe-os recursivamente
+        if (node.children && node.children.length > 0) {
+          node.children = removeNode(node.children)
         }
+
         return true
       })
     }
 
-    const updatedFiles = deleteFromFiles([...files])
+    const updatedFiles = removeNode([...files])
     setFiles(updatedFiles)
     onFilesChange(updatedFiles)
   }
 
-  const handleFileRename = (id: string, newName: string) => {
-    const updateFiles = (nodes: FileNode[]): FileNode[] => {
-      return nodes.map((node) => {
-        if (node.id === id) {
-          return {
-            ...node,
-            name: newName,
-          }
+  const handleConfirmDialog = () => {
+    if (!inputValue.trim()) return
+
+    if (dialogOpen.type === "new-file" || dialogOpen.type === "new-folder") {
+      const newNode: FileNode = {
+        id: generateId(),
+        name: inputValue,
+        type: dialogOpen.type === "new-file" ? "file" : "folder",
+        parentId: dialogOpen.parentId,
+        content: dialogOpen.type === "new-file" ? "" : undefined,
+        children: dialogOpen.type === "new-folder" ? [] : undefined,
+      }
+
+      // Função recursiva para adicionar o nó no lugar correto
+      const addNode = (nodes: FileNode[]): FileNode[] => {
+        // Se estamos adicionando na raiz
+        if (!dialogOpen.parentId) {
+          return [...nodes, newNode]
         }
-        if (node.children) {
-          return {
-            ...node,
-            children: updateFiles(node.children),
+
+        return nodes.map((node) => {
+          // Se este é o nó pai, adicione o novo nó aos seus filhos
+          if (node.id === dialogOpen.parentId) {
+            return {
+              ...node,
+              children: [...(node.children || []), newNode],
+            }
           }
-        }
-        return node
-      })
+
+          // Se este nó tem filhos, processe-os recursivamente
+          if (node.children && node.children.length > 0) {
+            return {
+              ...node,
+              children: addNode(node.children),
+            }
+          }
+
+          return node
+        })
+      }
+
+      const updatedFiles = addNode([...files])
+      setFiles(updatedFiles)
+      onFilesChange(updatedFiles)
+
+      // Se criamos um arquivo, selecione-o automaticamente
+      if (dialogOpen.type === "new-file") {
+        setSelectedFile(newNode)
+      }
+    } else if (dialogOpen.type === "rename" && contextMenuTarget) {
+      // Função recursiva para renomear o nó
+      const renameNode = (nodes: FileNode[]): FileNode[] => {
+        return nodes.map((node) => {
+          if (node.id === contextMenuTarget.id) {
+            // Verificar se a extensão do arquivo mudou
+            const oldExtension = node.name.split(".").pop()?.toLowerCase()
+            const newExtension = inputValue.split(".").pop()?.toLowerCase()
+
+            // Se o arquivo renomeado é o arquivo selecionado e a extensão mudou
+            if (selectedFile && selectedFile.id === node.id && oldExtension !== newExtension) {
+              // Atualizar o arquivo selecionado com o novo nome
+              setTimeout(() => {
+                setSelectedFile({
+                  ...selectedFile,
+                  name: inputValue,
+                })
+              }, 0)
+            }
+
+            return {
+              ...node,
+              name: inputValue,
+            }
+          }
+
+          if (node.children && node.children.length > 0) {
+            return {
+              ...node,
+              children: renameNode(node.children),
+            }
+          }
+
+          return node
+        })
+      }
+
+      const updatedFiles = renameNode([...files])
+      setFiles(updatedFiles)
+      onFilesChange(updatedFiles)
     }
 
-    const updatedFiles = updateFiles(files)
-    setFiles(updatedFiles)
-    onFilesChange(updatedFiles)
+    setDialogOpen({ type: null, parentId: null })
   }
 
   const handleCodeChange = (newValue: string) => {
     if (!selectedFile) return
 
-    const updateFiles = (nodes: FileNode[]): FileNode[] => {
+    // Função recursiva para atualizar o conteúdo do arquivo
+    const updateContent = (nodes: FileNode[]): FileNode[] => {
       return nodes.map((node) => {
         if (node.id === selectedFile.id) {
           return {
@@ -163,102 +236,96 @@ export function Component({ ...props }: ComponentProps) {
             content: newValue,
           }
         }
-        if (node.children) {
+
+        if (node.children && node.children.length > 0) {
           return {
             ...node,
-            children: updateFiles(node.children),
+            children: updateContent(node.children),
           }
         }
+
         return node
       })
     }
 
-    const updatedFiles = updateFiles(files)
+    const updatedFiles = updateContent([...files])
     setFiles(updatedFiles)
     onFilesChange(updatedFiles)
   }
 
-  const handleContextMenu = (e: React.MouseEvent, file: FileNode | null) => {
-    debugger
-    e.preventDefault()
-    e.stopPropagation()
-    setContextMenuTarget(file)
-  }
-
-  const handleNewFile = () => {
-    setShowNewFileDialog(true)
-  }
-
-  const createNewFile = () => {
-    if (newFileName) {
-      handleFileCreate(contextMenuTarget?.id || null, "file", newFileName)
-      setNewFileName("")
-      setShowNewFileDialog(false)
-    }
-  }
-
-  const startRenaming = () => {
-    if (contextMenuTarget) {
-      setNewName(contextMenuTarget.name)
-      setIsRenaming(true)
-    }
-  }
-
-  const completeRenaming = () => {
-    if (contextMenuTarget && newName) {
-      handleFileRename(contextMenuTarget.id, newName)
-      setIsRenaming(false)
-    }
-  }
-
   return (
-    <div className={cn("", className) }>
-      <ResizablePanelGroup className="h-full" direction="horizontal">
-        <ResizablePanel defaultSize={20} minSize={15}>
-          <div className="h-full overflow-auto">
-            <ContextMenu>
-              <ContextMenuTrigger className={cn("", className) }>
-                <div className={cn("", className) } onContextMenu={(e) => handleContextMenu(e, null)}>
-                  <FileTree
-                    files={files}
-                    onFileSelect={handleFileSelect}
-                    onFileCreate={handleFileCreate}
-                    onFileDelete={handleFileDelete}
-                    onFileRename={handleFileRename}
-                    selectedFileId={selectedFile?.id}
-                    onContextMenu={handleContextMenu}
-                  />
-                </div>
-              </ContextMenuTrigger>
-              <ContextMenuContent>
-                {contextMenuTarget ? (
-                  // Menu para arquivo/pasta selecionado
-                  <>
-                    <ContextMenuItem onSelect={startRenaming}>Renomear</ContextMenuItem>
-                    <ContextMenuItem onSelect={() => handleFileDelete(contextMenuTarget.id)}>Excluir</ContextMenuItem>
-                  </>
-                ) : (
-                  // Menu para área vazia
-                  <>
-                    <ContextMenuItem onSelect={handleNewFile}>Novo Arquivo</ContextMenuItem>
-                    <ContextMenuItem onSelect={() => handleFileCreate(null, "folder", "Nova Pasta")}>
-                      Nova Pasta
-                    </ContextMenuItem>
-                  </>
-                )}
-              </ContextMenuContent>
-            </ContextMenu>
+    <div className={cn("", className)}>
+      <ResizablePanelGroup direction="horizontal" className={cn("", className)}>
+        <ResizablePanel defaultSize={20} minSize={15} className={cn("", className)}>
+          <div className={cn("overflow-hidden", className)}>
+            <FileTree
+              files={files}
+              onFileSelect={handleFileSelect}
+              onFileCreate={(parentId, type, name) => {
+                if (type === "file") {
+                  handleCreateFile(parentId)
+                } else {
+                  handleCreateFolder(parentId)
+                }
+              }}
+              onFileDelete={handleDelete}
+              onFileRename={(id, newName) => {
+                if (!newName.trim()) return
+
+                // Função recursiva para renomear o nó
+                const renameNode = (nodes: FileNode[]): FileNode[] => {
+                  return nodes.map((node) => {
+                    if (node.id === id) {
+                      // Verificar se a extensão do arquivo mudou
+                      const oldExtension = node.name.split(".").pop()?.toLowerCase()
+                      const newExtension = newName.split(".").pop()?.toLowerCase()
+
+                      // Se o arquivo renomeado é o arquivo selecionado e a extensão mudou
+                      if (selectedFile && selectedFile.id === id && oldExtension !== newExtension) {
+                        // Atualizar o arquivo selecionado com o novo nome
+                        setTimeout(() => {
+                          setSelectedFile({
+                            ...selectedFile,
+                            name: newName,
+                          })
+                        }, 0)
+                      }
+
+                      return {
+                        ...node,
+                        name: newName,
+                      }
+                    }
+
+                    if (node.children && node.children.length > 0) {
+                      return {
+                        ...node,
+                        children: renameNode(node.children),
+                      }
+                    }
+
+                    return node
+                  })
+                }
+
+                const updatedFiles = renameNode([...files])
+                setFiles(updatedFiles)
+                onFilesChange(updatedFiles)
+              }}
+              selectedFileId={selectedFile?.id}
+              onContextMenu={handleContextMenu}
+            />
           </div>
         </ResizablePanel>
         <ResizableHandle />
         <ResizablePanel defaultSize={80}>
           <div className="h-full">
             {selectedFile ? (
-              <MonacoEditor
-                value={selectedFile.content || ""}
-                onChange={handleCodeChange}
-                language={selectedFile.name.endsWith(".tsx") ? "typescript" : "javascript"}
-              />
+                <MonacoEditor
+                  value={selectedFile.content || ""}
+                  onChange={handleCodeChange}
+                  language={getLanguageFromFilename(selectedFile.name)}
+                />
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
                 Selecione um arquivo para editar
@@ -268,34 +335,74 @@ export function Component({ ...props }: ComponentProps) {
         </ResizablePanel>
       </ResizablePanelGroup>
 
-      <Dialog open={showNewFileDialog} onOpenChange={setShowNewFileDialog}>
+      <Dialog
+        open={dialogOpen.type !== null}
+        onOpenChange={(open) => {
+          if (!open) setDialogOpen({ type: null, parentId: null })
+        }}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Criar Novo Arquivo</DialogTitle>
+            <DialogTitle>
+              {dialogOpen.type === "new-file" && "Criar Novo Arquivo"}
+              {dialogOpen.type === "new-folder" && "Criar Nova Pasta"}
+              {dialogOpen.type === "rename" && "Renomear"}
+            </DialogTitle>
           </DialogHeader>
           <Input
-            value={newFileName}
-            onChange={(e) => setNewFileName(e.target.value)}
-            placeholder="Nome do arquivo (ex: arquivo.tsx)"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder={
+              dialogOpen.type === "new-file"
+                ? "Nome do arquivo (ex: arquivo.tsx)"
+                : dialogOpen.type === "new-folder"
+                  ? "Nome da pasta"
+                  : "Novo nome"
+            }
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleConfirmDialog()
+              }
+            }}
           />
-          <DialogClose asChild>
-            <Button onClick={createNewFile}>Criar</Button>
-          </DialogClose>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isRenaming} onOpenChange={setIsRenaming}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Renomear {contextMenuTarget?.name}</DialogTitle>
-          </DialogHeader>
-          <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Novo nome" />
-          <DialogClose asChild>
-            <Button onClick={completeRenaming}>Renomear</Button>
-          </DialogClose>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancelar</Button>
+            </DialogClose>
+            <Button onClick={handleConfirmDialog}>
+              {dialogOpen.type === "new-file" && "Criar Arquivo"}
+              {dialogOpen.type === "new-folder" && "Criar Pasta"}
+              {dialogOpen.type === "rename" && "Renomear"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   )
+}
+
+// Função para determinar a linguagem com base na extensão do arquivo
+function getLanguageFromFilename(filename: string): string {
+  const extension = filename.split(".").pop()?.toLowerCase()
+
+  switch (extension) {
+    case "ts":
+    case "tsx":
+      return "typescript"
+    case "js":
+    case "jsx":
+      return "javascript"
+    case "json":
+      return "json"
+    case "css":
+      return "css"
+    case "html":
+      return "html"
+    case "md":
+      return "markdown"
+    default:
+      return "plaintext"
+  }
 }
 
