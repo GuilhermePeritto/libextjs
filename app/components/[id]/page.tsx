@@ -16,7 +16,7 @@ import {
   type ComponentFile,
   type ComponentFolder,
 } from "@/data/componentes-iniciais"
-import { Check, ChevronLeft, Copy, ExternalLink } from "lucide-react"
+import { Check, Copy, ExternalLink } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
@@ -78,10 +78,6 @@ export default function ComponenteDetalhes({ params }: { params: { id: string } 
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <Button variant="ghost" onClick={() => router.back()} className="mb-4">
-        <ChevronLeft className="mr-2 h-4 w-4" />
-        Voltar
-      </Button>
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">

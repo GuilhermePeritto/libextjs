@@ -1,40 +1,44 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "sonner"
-import { usePermissions } from "@/hooks/use-permissions"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Switch } from "@/components/ui/switch"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Folder, File, Plus, Trash } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { usePermissions } from "@/hooks/use-permissions"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
+import { CodeTab } from "./tabs/code-tab"
+import { ExamplesTab } from "./tabs/examples-tab"
+import { MethodsTab } from "./tabs/methods-tab"
+import { PreviewTab } from "./tabs/preview-tab"
+import { PropertiesTab } from "./tabs/properties-tab"
+import { UsageTab } from "./tabs/usage-tab"
 
-interface ComponentFile {
+interface FileNode {
+  id: string
   name: string
-  content: string
-}
-
-interface ComponentFolder {
-  name: string
-  children: (ComponentFile | ComponentFolder)[]
+  type: "file" | "folder"
+  content?: string
+  children?: FileNode[]
 }
 
 interface NovoComponente {
   nome: string
   descricao: string
-  codigo: ComponentFile | ComponentFolder
+  comoUsar: string
+  componente: string
+  codigo: FileNode[]
   autor: string
-  tamanho: "normal" | "largo"
-  preview: boolean
-  metodos: { nome: string; descricao: string }[]
-  propriedades: { nome: string; tipo: string; descricao: string }[]
+  ultimaModificacao: string
+  tamanho: "pequeno" | "normal" | "largo" | "extralargo"
+  metodos: { nome: string; parametros: string; retorno: string; descricao: string }[]
+  propriedades: { nome: string; tipo: string; descricao: string; padrao?: string }[]
   exemplos: { titulo: string; codigo: string }[]
 }
 
@@ -44,136 +48,25 @@ export default function NewComponent() {
   const [novoComponente, setNovoComponente] = useState<NovoComponente>({
     nome: "",
     descricao: "",
-    codigo: { name: "root", children: [] },
+    comoUsar: "",
+    componente: "",
+    codigo: [],
     autor: "",
+    ultimaModificacao: new Date().toISOString(),
     tamanho: "normal",
-    preview: true,
-    metodos: [],
-    propriedades: [],
-    exemplos: [],
+    metodos: [{ nome: "", parametros: "", retorno: "", descricao: "" }],
+    propriedades: [{ nome: "", tipo: "", descricao: "" }],
+    exemplos: [{ titulo: "", codigo: "" }],
   })
 
-  const handleAddFile = (path: string[] = []) => {
-    const newFile: ComponentFile = { name: "novo-arquivo.tsx", content: "" }
-    setNovoComponente((prev) => {
-      const newCodigo = { ...prev.codigo }
-      let current: ComponentFolder = newCodigo as ComponentFolder
-      for (const folder of path) {
-        current = current.children.find(
-          (c): c is ComponentFolder => "children" in c && c.name === folder,
-        ) as ComponentFolder
-      }
-      current.children.push(newFile)
-      return { ...prev, codigo: newCodigo }
-    })
-  }
-
-  const handleAddFolder = (path: string[] = []) => {
-    const newFolder: ComponentFolder = { name: "nova-pasta", children: [] }
-    setNovoComponente((prev) => {
-      const newCodigo = { ...prev.codigo }
-      let current: ComponentFolder = newCodigo as ComponentFolder
-      for (const folder of path) {
-        current = current.children.find(
-          (c): c is ComponentFolder => "children" in c && c.name === folder,
-        ) as ComponentFolder
-      }
-      current.children.push(newFolder)
-      return { ...prev, codigo: newCodigo }
-    })
-  }
-
-  const handleUpdateFile = (path: string[], name: string, content: string) => {
-    setNovoComponente((prev) => {
-      const newCodigo = { ...prev.codigo }
-      let current: ComponentFolder = newCodigo as ComponentFolder
-      for (const folder of path.slice(0, -1)) {
-        current = current.children.find(
-          (c): c is ComponentFolder => "children" in c && c.name === folder,
-        ) as ComponentFolder
-      }
-      const file = current.children.find(
-        (c): c is ComponentFile => "content" in c && c.name === path[path.length - 1],
-      ) as ComponentFile
-      file.name = name
-      file.content = content
-      return { ...prev, codigo: newCodigo }
-    })
-  }
-
-  const handleDeleteItem = (path: string[]) => {
-    setNovoComponente((prev) => {
-      const newCodigo = { ...prev.codigo }
-      let current: ComponentFolder = newCodigo as ComponentFolder
-      for (const folder of path.slice(0, -1)) {
-        current = current.children.find(
-          (c): c is ComponentFolder => "children" in c && c.name === folder,
-        ) as ComponentFolder
-      }
-      current.children = current.children.filter((c) => c.name !== path[path.length - 1])
-      return { ...prev, codigo: newCodigo }
-    })
-  }
-
-  const renderFileTree = (item: ComponentFile | ComponentFolder, path: string[] = []): React.ReactNode => {
-    if ("content" in item) {
-      return (
-        <div key={path.join("/")} className="flex items-center space-x-2 py-2">
-          <File className="h-4 w-4" />
-          <Input
-            value={item.name}
-            onChange={(e) => handleUpdateFile(path, e.target.value, item.content)}
-            className="w-full"
-          />
-          <Button variant="ghost" size="icon" onClick={() => handleDeleteItem(path)}>
-            <Trash className="h-4 w-4" />
-          </Button>
-        </div>
-      )
-    } else {
-      return (
-        <Accordion type="single" collapsible key={path.join("/")}>
-          <AccordionItem value={item.name}>
-            <AccordionTrigger className="py-2">
-              <div className="flex items-center space-x-2">
-                <Folder className="h-4 w-4" />
-                <Input
-                  value={item.name}
-                  onChange={(e) => {
-                    setNovoComponente((prev) => {
-                      const newCodigo = { ...prev.codigo }
-                      let current: ComponentFolder = newCodigo as ComponentFolder
-                      for (const folder of path) {
-                        current = current.children.find(
-                          (c): c is ComponentFolder => "children" in c && c.name === folder,
-                        ) as ComponentFolder
-                      }
-                      current.name = e.target.value
-                      return { ...prev, codigo: newCodigo }
-                    })
-                  }}
-                  className="w-full"
-                />
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="pl-4">
-                {item.children.map((child, index) => renderFileTree(child, [...path, item.name]))}
-                <div className="flex space-x-2 mt-2">
-                  <Button variant="outline" size="sm" onClick={() => handleAddFile([...path, item.name])}>
-                    <Plus className="h-4 w-4 mr-2" /> Adicionar Arquivo
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleAddFolder([...path, item.name])}>
-                    <Plus className="h-4 w-4 mr-2" /> Adicionar Pasta
-                  </Button>
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      )
+  useEffect(() => {
+    // Get the logged-in user's name from localStorage
+    const user = localStorage.getItem("user")
+    if (user) {
+      const { name } = JSON.parse(user)
+      setNovoComponente((prev) => ({ ...prev, autor: name }))
     }
-  }
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -183,7 +76,8 @@ export default function NewComponent() {
     }
 
     if (novoComponente.nome && novoComponente.descricao && novoComponente.codigo) {
-      console.log("Novo componente:", novoComponente)
+      const componenteJSON = JSON.stringify(novoComponente, null, 2)
+      console.log("Novo componente:", componenteJSON)
       toast.success("Componente adicionado com sucesso!")
       router.push("/components")
     } else {
@@ -204,274 +98,120 @@ export default function NewComponent() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-4xl font-bold mb-8">Adicionar Novo Componente</h1>
-      <div className="max-w-4xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle>Detalhes do Componente</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="basic" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="basic">Informações Básicas</TabsTrigger>
-                <TabsTrigger value="code">Código</TabsTrigger>
-                <TabsTrigger value="api">API</TabsTrigger>
-                <TabsTrigger value="examples">Exemplos</TabsTrigger>
-                <TabsTrigger value="settings">Configurações</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="basic">
-                <form className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nome">Nome do Componente</Label>
-                    <Input
-                      id="nome"
-                      value={novoComponente.nome}
-                      onChange={(e) => setNovoComponente({ ...novoComponente, nome: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="descricao">Descrição</Label>
-                    <Textarea
-                      id="descricao"
-                      value={novoComponente.descricao}
-                      onChange={(e) => setNovoComponente({ ...novoComponente, descricao: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="autor">Autor</Label>
-                    <Input
-                      id="autor"
-                      value={novoComponente.autor}
-                      onChange={(e) => setNovoComponente({ ...novoComponente, autor: e.target.value })}
-                    />
-                  </div>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="code">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Estrutura do Componente</Label>
-                    <Card>
-                      <CardContent className="pt-6">
-                        {renderFileTree(novoComponente.codigo)}
-                        <div className="flex space-x-2 mt-4">
-                          <Button variant="outline" onClick={() => handleAddFile()}>
-                            <Plus className="h-4 w-4 mr-2" /> Adicionar Arquivo
-                          </Button>
-                          <Button variant="outline" onClick={() => handleAddFolder()}>
-                            <Plus className="h-4 w-4 mr-2" /> Adicionar Pasta
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="api">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Métodos</Label>
-                    {novoComponente.metodos.map((metodo, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <Input
-                          placeholder="Nome do método"
-                          value={metodo.nome}
-                          onChange={(e) => {
-                            const newMetodos = [...novoComponente.metodos]
-                            newMetodos[index].nome = e.target.value
-                            setNovoComponente({ ...novoComponente, metodos: newMetodos })
-                          }}
-                        />
-                        <Input
-                          placeholder="Descrição"
-                          value={metodo.descricao}
-                          onChange={(e) => {
-                            const newMetodos = [...novoComponente.metodos]
-                            newMetodos[index].descricao = e.target.value
-                            setNovoComponente({ ...novoComponente, metodos: newMetodos })
-                          }}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            const newMetodos = novoComponente.metodos.filter((_, i) => i !== index)
-                            setNovoComponente({ ...novoComponente, metodos: newMetodos })
-                          }}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        setNovoComponente({
-                          ...novoComponente,
-                          metodos: [...novoComponente.metodos, { nome: "", descricao: "" }],
-                        })
-                      }
-                    >
-                      <Plus className="h-4 w-4 mr-2" /> Adicionar Método
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Propriedades</Label>
-                    {novoComponente.propriedades.map((prop, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <Input
-                          placeholder="Nome da propriedade"
-                          value={prop.nome}
-                          onChange={(e) => {
-                            const newProps = [...novoComponente.propriedades]
-                            newProps[index].nome = e.target.value
-                            setNovoComponente({ ...novoComponente, propriedades: newProps })
-                          }}
-                        />
-                        <Input
-                          placeholder="Tipo"
-                          value={prop.tipo}
-                          onChange={(e) => {
-                            const newProps = [...novoComponente.propriedades]
-                            newProps[index].tipo = e.target.value
-                            setNovoComponente({ ...novoComponente, propriedades: newProps })
-                          }}
-                        />
-                        <Input
-                          placeholder="Descrição"
-                          value={prop.descricao}
-                          onChange={(e) => {
-                            const newProps = [...novoComponente.propriedades]
-                            newProps[index].descricao = e.target.value
-                            setNovoComponente({ ...novoComponente, propriedades: newProps })
-                          }}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            const newProps = novoComponente.propriedades.filter((_, i) => i !== index)
-                            setNovoComponente({ ...novoComponente, propriedades: newProps })
-                          }}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        setNovoComponente({
-                          ...novoComponente,
-                          propriedades: [...novoComponente.propriedades, { nome: "", tipo: "", descricao: "" }],
-                        })
-                      }
-                    >
-                      <Plus className="h-4 w-4 mr-2" /> Adicionar Propriedade
-                    </Button>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="examples">
-                <div className="space-y-4">
-                  <Label>Exemplos de Uso</Label>
-                  {novoComponente.exemplos.map((exemplo, index) => (
-                    <div key={index} className="space-y-2">
-                      <Input
-                        placeholder="Título do exemplo"
-                        value={exemplo.titulo}
-                        onChange={(e) => {
-                          const newExemplos = [...novoComponente.exemplos]
-                          newExemplos[index].titulo = e.target.value
-                          setNovoComponente({ ...novoComponente, exemplos: newExemplos })
-                        }}
-                      />
-                      <Textarea
-                        placeholder="Código do exemplo"
-                        value={exemplo.codigo}
-                        onChange={(e) => {
-                          const newExemplos = [...novoComponente.exemplos]
-                          newExemplos[index].codigo = e.target.value
-                          setNovoComponente({ ...novoComponente, exemplos: newExemplos })
-                        }}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          const newExemplos = novoComponente.exemplos.filter((_, i) => i !== index)
-                          setNovoComponente({ ...novoComponente, exemplos: newExemplos })
-                        }}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      setNovoComponente({
-                        ...novoComponente,
-                        exemplos: [...novoComponente.exemplos, { titulo: "", codigo: "" }],
-                      })
-                    }
-                  >
-                    <Plus className="h-4 w-4 mr-2" /> Adicionar Exemplo
-                  </Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="settings">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Tamanho do Card</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Escolha se o componente ocupará mais espaço na visualização
-                      </p>
-                    </div>
-                    <Select
-                      value={novoComponente.tamanho}
-                      onValueChange={(value) =>
-                        setNovoComponente({ ...novoComponente, tamanho: value as "normal" | "largo" })
-                      }
-                    >
-                      <SelectTrigger className="w-[200px]">
-                        <SelectValue placeholder="Selecione o tamanho" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="normal">Normal</SelectItem>
-                        <SelectItem value="largo">Largo</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Preview ao Vivo</Label>
-                      <p className="text-sm text-muted-foreground">Mostrar preview do componente em tempo real</p>
-                    </div>
-                    <Switch
-                      checked={novoComponente.preview}
-                      onCheckedChange={(checked) => setNovoComponente({ ...novoComponente, preview: checked })}
-                    />
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-
-            <div className="mt-6 flex justify-end gap-4">
-              <Button variant="outline" onClick={() => router.back()}>
-                Cancelar
-              </Button>
-              <Button onClick={handleSubmit}>Adicionar Componente</Button>
+    <div className="container mx-auto pt-8 px-4">
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col space-y-4 w-full">
+            <div className="w-full">
+              <CardTitle className="text-3xl mb-2">
+                <Input
+                  value={novoComponente.nome}
+                  onChange={(e) => setNovoComponente({ ...novoComponente, nome: e.target.value })}
+                  placeholder="Nome do Componente"
+                  className="text-3xl font-bold w-full"
+                />
+              </CardTitle>
+              <Textarea
+                value={novoComponente.descricao}
+                onChange={(e) => setNovoComponente({ ...novoComponente, descricao: e.target.value })}
+                placeholder="Descrição do componente"
+                className="text-muted-foreground w-full"
+              />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="flex justify-between items-center">
+            <div className="flex flex-wrap gap-2 mt-4">
+              <Badge variant="secondary" className="text-xs">
+                {novoComponente.codigo.length > 0 ? "Múltiplos Arquivos" : "Arquivo Único"}
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                Autor:
+                <Input
+                  id="autor"
+                  value={novoComponente.autor}
+                  onChange={(e) => setNovoComponente({ ...novoComponente, autor: e.target.value })}
+                  placeholder="Nome do autor"
+                  className="w-32 ml-1 h-5 px-1"
+                />
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                Última modificação: {new Date(novoComponente.ultimaModificacao).toLocaleDateString()}
+              </Badge>
+            </div>
+            <div className="flex items-center mt-4">
+              <Select
+                value={novoComponente.tamanho}
+                onValueChange={(value) =>
+                  setNovoComponente({
+                    ...novoComponente,
+                    tamanho: value as "pequeno" | "normal" | "largo" | "extralargo",
+                  })
+                }
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Tamanho do componente" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pequeno">Pequeno</SelectItem>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="largo">Largo</SelectItem>
+                  <SelectItem value="extralargo">Extra Largo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="max-h-[calc(55vh) h-[calc(55vh) min-h-[calc(55vh)]">
+          <Tabs defaultValue="code" className="w-full">
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="preview">Visualização</TabsTrigger>
+              <TabsTrigger value="code">Código</TabsTrigger>
+              <TabsTrigger value="props">Propriedades</TabsTrigger>
+              <TabsTrigger value="methods">Métodos</TabsTrigger>
+              <TabsTrigger value="usage">Como Usar</TabsTrigger>
+              <TabsTrigger value="examples">Exemplos</TabsTrigger>
+            </TabsList>
+            <TabsContent value="preview" className="h-full">
+              <PreviewTab componentDefinition={novoComponente.componente} componentUsage={novoComponente.comoUsar} />
+            </TabsContent>
+            <TabsContent value="code" className="h-full">
+              <CodeTab
+                initialFiles={novoComponente.codigo}
+                onFilesChange={(files) => setNovoComponente({ ...novoComponente, codigo: files })}
+              />
+            </TabsContent>
+            <TabsContent value="props" className="h-full">
+              <PropertiesTab
+                properties={novoComponente.propriedades}
+                onChange={(props) => setNovoComponente({ ...novoComponente, propriedades: props })}
+              />
+            </TabsContent>
+            <TabsContent value="methods" className="h-full">
+              <MethodsTab
+                methods={novoComponente.metodos}
+                onChange={(methods) => setNovoComponente({ ...novoComponente, metodos: methods })}
+              />
+            </TabsContent>
+            <TabsContent value="usage" className="h-full">
+              <UsageTab
+                usage={novoComponente.comoUsar}
+                onChange={(usage) => setNovoComponente({ ...novoComponente, comoUsar: usage })}
+              />
+            </TabsContent>
+            <TabsContent value="examples" className="h-full">
+              <ExamplesTab
+                examples={novoComponente.exemplos}
+                onChange={(examples) => setNovoComponente({ ...novoComponente, exemplos: examples })}
+              />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+      <div className="mt-6 flex justify-end gap-4">
+        <Button variant="outline" onClick={() => router.back()}>
+          Cancelar
+        </Button>
+        <Button onClick={handleSubmit}>Adicionar Componente</Button>
       </div>
     </div>
   )
