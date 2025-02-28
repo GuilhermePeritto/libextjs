@@ -1,0 +1,115 @@
+[
+  {
+    "id": "1",
+    "name": "src",
+    "type": "folder",
+    "children": [
+      {
+        "id": "2",
+        "name": "components",
+        "type": "folder",
+        "children": [
+          {
+            "id": "3",
+            "name": "Button.tsx",
+            "type": "file",
+            "extension": "tsx",
+            "language": "typescript",
+            "content": "import React from 'react';\nexport const Button = ({ children }) => {\n  return <button className=\"px-4 py-2 bg-blue-500 text-white rounded\">{children}</button>;\n};"
+          },
+          {
+            "id": "4",
+            "name": "Card.tsx",
+            "type": "file",
+            "extension": "tsx",
+            "language": "typescript",
+            "content": "import React from 'react';\nexport const Card = ({ title, children }) => {\n  return (\n    <div className=\"border rounded-lg p-4 shadow-sm\">\n      {title && <h3 className=\"text-lg font-medium mb-2\">{title}</h3>}\n      {children}\n    </div>\n  );\n};"
+          }
+        ]
+      },
+      {
+        "id": "5",
+        "name": "pages",
+        "type": "folder",
+        "children": [
+          {
+            "id": "6",
+            "name": "index.tsx",
+            "type": "file",
+            "extension": "tsx",
+            "language": "typescript",
+            "content": "import React from 'react';\nimport { Button } from '../components/Button';\nimport { Card } from '../components/Card';\nexport default function Home() {\n  return (\n    <div className=\"p-8\">\n      <h1 className=\"text-2xl font-bold mb-4\">Home Page</h1>\n      <Card title=\"Welcome\">\n        <p className=\"mb-4\">This is a sample home page.</p>\n        <Button>Click me</Button>\n      </Card>\n    </div>\n  );\n}"
+          },
+          {
+            "id": "7",
+            "name": "about.tsx",
+            "type": "file",
+            "extension": "tsx",
+            "language": "typescript",
+            "content": "import React from 'react';\nexport default function About() {\n  return (\n    <div className=\"p-8\">\n      <h1 className=\"text-2xl font-bold mb-4\">About Page</h1>\n      <p>This is the about page.</p>\n    </div>\n  );\n}"
+          }
+        ]
+      },
+      {
+        "id": "8",
+        "name": "assets",
+        "type": "folder",
+        "children": [
+          {
+            "id": "9",
+            "name": "logo.png",
+            "type": "file",
+            "extension": "png",
+            "content": "/placeholder.svg?height=200&width=200"
+          }
+        ]
+      },
+      {
+        "id": "10",
+        "name": "styles",
+        "type": "folder",
+        "children": [
+          {
+            "id": "11",
+            "name": "globals.css",
+            "type": "file",
+            "extension": "css",
+            "language": "css",
+            "content": "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\nbody {\n  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;\n}"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "12",
+    "name": "public",
+    "type": "folder",
+    "children": [
+      {
+        "id": "13",
+        "name": "favicon.ico",
+        "type": "file",
+        "extension": "ico",
+        "content": "// Binary content"
+      }
+    ]
+  },
+  {
+    "id": "14",
+    "name": "package.json",
+    "type": "file",
+    "extension": "json",
+    "language": "json",
+    "content": "{\n  \"name\": \"my-app\",\n  \"version\": \"0.1.0\",\n  \"private\": true,\n  \"scripts\": {\n    \"dev\": \"next dev\",\n    \"build\": \"next build\",\n    \"start\": \"next start\",\n    \"lint\": \"next lint\"\n  },\n  \"dependencies\": {\n    \"next\": \"^13.4.19\",\n    \"react\": \"^18.2.0\",\n    \"react-dom\": \"^18.2.0\"\n  },\n  \"devDependencies\": {\n    \"@types/node\": \"^20.5.7\",\n    \"@types/react\": \"^18.2.21\",\n    \"@types/react-dom\": \"^18.2.7\",\n    \"autoprefixer\": \"^10.4.15\",\n    \"postcss\": \"^8.4.29\",\n    \"tailwindcss\": \"^3.3.3\",\n    \"typescript\": \"^5.2.2\"\n  }\n}"
+  },
+  {
+    "id": "15",
+    "name": "README.md",
+    "type": "file",
+    "extension": "md",
+    "language": "markdown",
+    "content": "# My App\n\nThis is a sample Next.js application.\n\n## Getting Started\n\nFirst, run the development server:\n\n```bash\nnpm run dev\n# or\nyarn dev\n```\n\nOpen [http://localhost:3000](http://localhost:3000) with your browser to see the result."
+  }
+]
+

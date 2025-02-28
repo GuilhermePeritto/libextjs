@@ -1,7 +1,8 @@
 "use client"
 
-import { CodeEditorContainer } from "@/components/base/code-editor/code-editor-container"
-import { Card, CardContent } from "@/components/ui/card"
+import { CodeEditor } from "@/components/base/code-editor/CodeEditor"
+import { Card } from "@/components/ui/card"
+import "react-resizable/css/styles.css"
 
 interface FileNode {
     id: string
@@ -18,14 +19,8 @@ interface CodeTabProps {
 
 export function CodeTab({ initialFiles, onFilesChange }: CodeTabProps) {
     return (
-        <Card className="max-h-[calc(47vh) h-[calc(47vh) min-h-[calc(47vh)]">
-            <CardContent className="h-full">
-                <CodeEditorContainer
-                    initialFiles={initialFiles}
-                    onFilesChange={(files) => onFilesChange(files)}
-                    className="max-h-[calc(44vh) h-[calc(44vh) min-h-[calc(44vh)]"
-                />
-            </CardContent>
+        <Card style={{ height: "calc(47vh)", width: "100%" }} className="overflow-hidden">
+            <CodeEditor className="max-h-[calc(47vh) h-[calc(47vh) min-h-[calc(47vh)]"/>
         </Card>
     )
 }
