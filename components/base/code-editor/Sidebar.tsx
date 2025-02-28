@@ -532,9 +532,9 @@ export const Sidebar: React.FC = () => {
         <ContextMenuTrigger>
           <div className="w-full border-r h-full bg-white dark:bg-gray-900 flex flex-col relative" ref={sidebarRef}>
             <div className="p-4 flex justify-between items-center border-b">
-              <h2 className="text-lg font-semibold">Files</h2>
+              <h2 className="text-lg font-semibold">Arquivos</h2>
             </div>
-            <ScrollArea className="flex-grow overflow-x-hidden">
+            <ScrollArea className="flex-grow">
               <div className="p-2 h-full min-h-0">
                 <RootDropZone />
               </div>

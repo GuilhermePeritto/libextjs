@@ -1,7 +1,8 @@
-import type React from "react"
-import Editor from "@monaco-editor/react"
-import { ImageViewer } from "./ImageViewer"
 import type { EditorContentProps } from "@/types/editor"
+import Editor, { useMonaco } from "@monaco-editor/react"
+import type React from "react"
+import { useEffect } from "react"
+import { ImageViewer } from "./ImageViewer"
 
 const isImageFile = (extension?: string): boolean => {
   if (!extension) return false
@@ -10,9 +11,29 @@ const isImageFile = (extension?: string): boolean => {
 }
 
 export const EditorContent: React.FC<EditorContentProps> = ({ file, onChange, theme = "light", isModified }) => {
+  const monaco = useMonaco();
+
   if (isImageFile(file.extension)) {
     return <ImageViewer file={file} className="h-full" />
   }
+
+  useEffect(() => {
+    if(!monaco) return
+    
+    if (theme === "dark") {
+      import('monaco-themes/themes/GitHub Dark.json')
+        .then(data => {
+          monaco.editor.defineTheme("tema", data)
+          monaco.editor.setTheme("tema")
+        })
+    } else {
+      import('monaco-themes/themes/GitHub Light.json')
+        .then(data => {
+          monaco.editor.defineTheme("tema", data);
+          monaco.editor.setTheme("tema");
+        })
+    }
+  }, [theme])
 
   return (
     <Editor
