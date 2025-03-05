@@ -17,7 +17,6 @@ export function ExtComponent({ className = "", componentUsage, componentDefiniti
             }).toString();
 
             const url = `http://localhost:6969/ext-page?${queryParams}`;
-            debugger
             setIframeSrc(url);
         }
     }, [componentUsage, componentDefinition]);

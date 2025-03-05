@@ -1,9 +1,9 @@
 import {
-    ContextMenu,
-    ContextMenuContent,
-    ContextMenuItem,
-    ContextMenuSeparator,
-    ContextMenuTrigger,
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 import type { FileSystemItem } from "@/types/file-system"
 import type React from "react"
@@ -13,8 +13,8 @@ interface ContextMenuActionsProps {
   children: React.ReactNode
   onRename: (itemId: string) => void
   onDelete: (itemId: string) => void
-  onCreateFile: (parentId: string | null) => void
-  onCreateFolder: (parentId: string | null) => void
+  onCreateFile: (parentId: string | null, itemType: "file" | "folder") => void
+  onCreateFolder: (parentId: string | null, itemType: "file" | "folder") => void
 }
 
 export const ContextMenuActions: React.FC<ContextMenuActionsProps> = ({
@@ -37,15 +37,15 @@ export const ContextMenuActions: React.FC<ContextMenuActionsProps> = ({
             {item.type === "folder" && (
               <>
                 <ContextMenuSeparator />
-                <ContextMenuItem onClick={() => onCreateFile(item.id)}>New File</ContextMenuItem>
-                <ContextMenuItem onClick={() => onCreateFolder(item.id)}>New Folder</ContextMenuItem>
+                <ContextMenuItem onClick={() => onCreateFile(item.id, "file")}>New File</ContextMenuItem>
+                <ContextMenuItem onClick={() => onCreateFolder(item.id, "folder")}>New Folder</ContextMenuItem>
               </>
             )}
           </>
         ) : (
           <>
-            <ContextMenuItem onClick={() => onCreateFile(null)}>New File</ContextMenuItem>
-            <ContextMenuItem onClick={() => onCreateFolder(null)}>New Folder</ContextMenuItem>
+            <ContextMenuItem onClick={() => onCreateFile(null, "file")}>New File</ContextMenuItem>
+            <ContextMenuItem onClick={() => onCreateFolder(null, "folder")}>New Folder</ContextMenuItem>
           </>
         )}
       </ContextMenuContent>

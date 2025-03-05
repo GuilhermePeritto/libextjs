@@ -42,7 +42,7 @@ export const CodeEditor: React.FC<{ className?: string }> = ({ className }) => {
         <ResizablePanelGroup
           direction="horizontal"
         >
-          <ResizablePanel className={"h-full overflow-hidden flex-shrink-0"} defaultSize={40}>
+          <ResizablePanel className={"h-full overflow-hidden flex-shrink-0"} defaultSize={50}>
             <Sidebar />
           </ResizablePanel>
           <ResizableHandle />

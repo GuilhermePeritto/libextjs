@@ -4,9 +4,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useFileSystem } from "@/contexts/FileSystemContext"
 import { FileSystemItem } from "@/types/file-system"
 import { createParentMap } from "@/utils/file-system"
-import { getLanguageFromExtension, isImageFile, readFileAsDataURL } from "@/utils/file-utils"
+import { readFileAsDataURL } from "@/utils/file-utils"
 import type React from "react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { RootDropZone } from "./sidebar/RootDropZone"
@@ -22,12 +22,17 @@ export const Sidebar: React.FC = () => {
   // Adicionar memoização do mapa de pais
   const parentMap = useMemo(() => createParentMap(fileSystem), [fileSystem])
 
-  useEffect(() => {
-    if (editingItemId && editInputRef.current) {
-      editInputRef.current.focus()
-      editInputRef.current.select()
-    }
-  }, [editingItemId])
+  // Função para focar o input de edição
+  const focusEditInput = (itemId: string) => {
+    setEditingItemId(itemId)
+    setTimeout(() => {
+      const input = editInputRef.current
+      if (input) {
+        input.focus()
+        input.select()
+      }
+    }, 0)
+  }
 
   const toggleFolder = (folderId: string) => {
     setExpandedFolders((prev) => {
@@ -80,7 +85,25 @@ export const Sidebar: React.FC = () => {
       updateFileSystem((prevFileSystem) => {
         let removedItem: FileSystemItem | null = null
 
-        debugger
+        // Função para gerar um nome único
+        const generateUniqueName = (name: string, existingNames: Set<string>): string => {
+          const [baseName, extension] = name.split(".")
+          let newName = name
+          let counter = 1
+
+          while (existingNames.has(newName)) {
+            const match = baseName.match(/^(.+?)($$\d+$$)?$/)
+            if (match) {
+              newName = `${match[1]}(${counter})${extension ? "." + extension : ""}`
+            } else {
+              newName = `${baseName}(${counter})${extension ? "." + extension : ""}`
+            }
+            counter++
+          }
+
+          return newName
+        }
+
         // Função para processar a árvore de arquivos
         const processFileSystem = (items: FileSystemItem[], parentId: string | null = null): FileSystemItem[] => {
           return items
@@ -108,6 +131,14 @@ export const Sidebar: React.FC = () => {
         if (removedItem) {
           const addItemToTarget = (items: FileSystemItem[]): FileSystemItem[] => {
             return items.map((item) => {
+              const existingNames = new Set(newFileSystem.map((child) => child.name))
+              const uniqueName = generateUniqueName(removedItem.name, existingNames)
+
+              // Atualizar o nome do item removido se necessário
+              if (uniqueName !== removedItem?.name) {
+                removedItem = { ...removedItem, name: uniqueName }
+              }
+
               if (
                 (targetType === "folder" && item.id === targetId) ||
                 (targetType === "file" && item.id === targetId)
@@ -143,7 +174,10 @@ export const Sidebar: React.FC = () => {
   }
 
   const handleRenameSubmit = (itemId: string, newName: string) => {
+
     if (!newName.trim()) return
+
+    if (newName === "Novo Arquivo" || newName === "Nova Pasta") return
 
     updateFileSystem(
       (prevFileSystem) => {
@@ -166,7 +200,8 @@ export const Sidebar: React.FC = () => {
   }
 
   const createNewItem = (parentId: string | null, itemType: "file" | "folder") => {
-    const newItemName = itemType === "file" ? "New File" : "New Folder"
+    debugger
+    const newItemName = itemType === "file" ? "Novo Arquivo" : "Nova Pasta"
     const newItem: FileSystemItem = {
       id: Math.random().toString(36).substr(2, 9),
       name: newItemName,
@@ -200,7 +235,7 @@ export const Sidebar: React.FC = () => {
     if (parentId) {
       setExpandedFolders((prev) => new Set([...prev, parentId]))
     }
-    setEditingItemId(newItem.id)
+    focusEditInput(newItem.id)
   }
 
   const handleExternalFiles = async (files: FileList, parentId: string | null) => {
@@ -279,9 +314,42 @@ export const Sidebar: React.FC = () => {
     await processFiles()
   }
 
+  const isImageFile = (extension: string): boolean => {
+    const imageExtensions = ["jpg", "jpeg", "png", "gif", "svg", "webp", "bmp", "ico"]
+    return imageExtensions.includes(extension.toLowerCase())
+  }
+  const getLanguageFromExtension = (extension: string): string => {
+    const languageMap: Record<string, string> = {
+      js: "javascript",
+      jsx: "javascript",
+      ts: "typescript",
+      tsx: "typescript",
+      html: "html",
+      css: "css",
+      json: "json",
+      md: "markdown",
+      py: "python",
+      java: "java",
+      cpp: "cpp",
+      c: "c",
+      cs: "csharp",
+      go: "go",
+      rs: "rust",
+      php: "php",
+      rb: "ruby",
+      sql: "sql",
+      yml: "yaml",
+      yaml: "yaml",
+      xml: "xml",
+      sh: "shell",
+      bash: "shell",
+    }
+    return languageMap[extension.toLowerCase()] || "plaintext"
+  }
+
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="w-64 border-r h-full bg-white flex flex-col relative" ref={sidebarRef}>
+      <div className="w-full border-r h-full bg-white flex flex-col relative" ref={sidebarRef}>
         <SidebarHeader
           onCreateFile={() => createNewItem(null, "file")}
           onCreateFolder={() => createNewItem(null, "folder")}

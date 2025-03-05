@@ -19,8 +19,8 @@ interface FileTreeItemProps {
   onItemClick: (item: FileSystemItem) => void
   onRename: (itemId: string) => void
   onDelete: (itemId: string) => void
-  onCreateFile: (parentId: string | null) => void
-  onCreateFolder: (parentId: string | null) => void
+  onCreateFile: (parentId: string | null, itemType: "file" | "folder") => void
+  onCreateFolder: (parentId: string | null, itemType: "file" | "folder") => void
   onMoveItem: (sourceId: string, targetId: string | null, targetType: "file" | "folder") => void
   editingItemId: string | null
   onRenameSubmit: (itemId: string, newName: string) => void
@@ -244,7 +244,12 @@ export const FileTreeItem: React.FC<FileTreeItemProps> = ({
               type="text"
               defaultValue={item.name}
               className="bg-transparent outline-none flex-1 min-w-0 w-full"
-              onBlur={(e) => onRenameSubmit(item.id, e.target.value)}
+              autoComplete="on"
+              onBlur={(e) => {
+                e.preventDefault()
+                onRenameSubmit(item.id, e.target.value)
+              }
+              }
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   onRenameSubmit(item.id, e.currentTarget.value)

@@ -15,8 +15,8 @@ interface RootDropZoneProps {
   onItemClick: (item: FileSystemItem) => void
   onRename: (itemId: string) => void
   onDelete: (itemId: string) => void
-  onCreateFile: (parentId: string | null) => void
-  onCreateFolder: (parentId: string | null) => void
+  onCreateFile: (parentId: string | null, itemType: "file" | "folder") => void
+  onCreateFolder: (parentId: string | null, itemType: "file" | "folder") => void
   onMoveItem: (sourceId: string, targetId: string | null, targetType: "file" | "folder") => void
   editingItemId: string | null
   onRenameSubmit: (itemId: string, newName: string) => void
