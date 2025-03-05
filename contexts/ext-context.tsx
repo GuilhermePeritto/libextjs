@@ -53,6 +53,29 @@ export function ExtProvider({ children, extJsVersion = "7.6.0", theme = "triton"
 
 
     useEffect(() => {
+        if (typeof window.useRequestImage !== 'undefined') {
+            console.warn('useRequestImage já foi declarado. Criando um proxy para evitar conflitos.');
+    
+            window.useRequestImage = new Proxy(window.useRequestImage, {
+                apply: function(target, thisArg, argumentsList) {
+                    console.log('useRequestImage foi chamado com os argumentos:', argumentsList);
+                    return target.apply(thisArg, argumentsList);
+                },
+                get: function(target, prop, receiver) {
+                    console.log(`Acessando a propriedade "${prop}" de useRequestImage`);
+                    return Reflect.get(target, prop, receiver);
+                },
+                set: function(target, prop, value, receiver) {
+                    console.log(`Definindo a propriedade "${prop}" de useRequestImage como:`, value);
+                    return Reflect.set(target, prop, value, receiver);
+                }
+            });
+        } else {
+            window.useRequestImage = function() {
+                console.warn('useRequestImage foi chamado, mas não está definido.');
+            };
+        }
+        
         const loadExtJS = async () => {
             try {
                 // Load ExtJS core
