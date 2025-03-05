@@ -7,6 +7,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useFileSystem } from "@/contexts/FileSystemContext"
 import { cn } from "@/lib/utils"
@@ -531,8 +532,8 @@ export const Sidebar: React.FC = () => {
       <ContextMenu>
         <ContextMenuTrigger>
           <div className="w-full border-r h-full bg-white dark:bg-gray-900 flex flex-col relative" ref={sidebarRef}>
-            <div className="p-4 flex justify-between items-center border-b">
-              <h2 className="text-lg font-semibold">Arquivos</h2>
+            <div className="p-2 flex justify-between items-center border-b">
+              <Label className="text-lg font-semibold">Arquivos</Label>
             </div>
             <ScrollArea className="flex-grow">
               <div className="p-2 h-full min-h-0">
