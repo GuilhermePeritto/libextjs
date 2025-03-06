@@ -349,7 +349,7 @@ export const Sidebar: React.FC = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="w-full border-r h-full bg-white flex flex-col relative" ref={sidebarRef}>
+      <div className="w-full border-r h-full flex flex-col relative" ref={sidebarRef}>
         <SidebarHeader
           onCreateFile={() => createNewItem(null, "file")}
           onCreateFolder={() => createNewItem(null, "folder")}
