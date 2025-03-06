@@ -1,10 +1,4 @@
-const express = require('express');
-const cors = require('cors'); // Opcional, se precisar de CORS
-const app = express();
-const port = 6969;
-
-// Middleware para permitir CORS (opcional)
-app.use(cors());
+// src/lib/services/extJsService.ts
 
 // URLs dos recursos ExtJS e temas
 const useExtAllUrl = 'https://desenvuseall.useall.com.br/useallux/ext-all-7.8.0.js?d=010119000000';
@@ -15,8 +9,7 @@ const temaExtUrl_2 = 'https://desenvsb2.useall.com.br/servicos/resources/App-all
 const temaExtUrl_3 = 'https://desenvsb2.useall.com.br/servicos/resources/App-all_3.css';
 const temaExtUrl_4 = 'https://desenvsb2.useall.com.br/servicos/resources/App-all_4.css';
 
-// Função para gerar a página HTML com o componente ExtJS
-function generateExtPage(componentDefinition, componentUsage) {
+export function generateExtPage(componentDefinition: string, componentUsage: string): string {
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -122,20 +115,3 @@ function generateExtPage(componentDefinition, componentUsage) {
     </html>
   `;
 }
-
-// Rota para servir a página ExtJS
-app.get('/ext-page', (req, res) => {
-  const { componentDefinition, componentUsage } = req.query;
-
-  if (!componentUsage) {
-    return res.status(400).send('componentUsage é obrigatório');
-  }
-
-  const html = generateExtPage(decodeURIComponent(componentDefinition), decodeURIComponent(componentUsage));
-  res.send(html);
-});
-
-// Iniciar o servidor
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
-});

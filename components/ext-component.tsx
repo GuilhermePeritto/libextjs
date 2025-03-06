@@ -11,12 +11,14 @@ export function ExtComponent({ className = "", componentUsage, componentDefiniti
 
     useEffect(() => {
         if (componentUsage) {
+            // Cria os parâmetros da URL
             const queryParams = new URLSearchParams({
-                componentDefinition: encodeURIComponent(componentDefinition || ''),
-                componentUsage: encodeURIComponent(componentUsage)
+                componentDefinition: componentDefinition || '', // Não é necessário encodeURIComponent
+                componentUsage: componentUsage // Não é necessário encodeURIComponent
             }).toString();
 
-            const url = `http://localhost:6969/ext-page?${queryParams}`;
+            // Define a URL da API do Next.js
+            const url = `/api/ext?${queryParams}`;
             setIframeSrc(url);
         }
     }, [componentUsage, componentDefinition]);
