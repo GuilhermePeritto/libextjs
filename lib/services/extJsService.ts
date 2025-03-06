@@ -1,5 +1,3 @@
-// src/lib/services/extJsService.ts
-
 // URLs dos recursos ExtJS e temas
 const useExtAllUrl = 'https://desenvuseall.useall.com.br/useallux/ext-all-7.8.0.js?d=010119000000';
 const useExtCoreUrl = 'https://desenvuseall.useall.com.br/useallux/useall-core-7.8.1.js?d=010119000000';
@@ -9,6 +7,7 @@ const temaExtUrl_2 = 'https://desenvsb2.useall.com.br/servicos/resources/App-all
 const temaExtUrl_3 = 'https://desenvsb2.useall.com.br/servicos/resources/App-all_3.css';
 const temaExtUrl_4 = 'https://desenvsb2.useall.com.br/servicos/resources/App-all_4.css';
 
+// Função para gerar a página HTML com o componente ExtJS
 export function generateExtPage(componentDefinition: string, componentUsage: string): string {
   return `
     <!DOCTYPE html>

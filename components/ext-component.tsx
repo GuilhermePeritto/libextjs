@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 
 interface ExtComponentProps {
@@ -11,13 +13,12 @@ export function ExtComponent({ className = "", componentUsage, componentDefiniti
 
     useEffect(() => {
         if (componentUsage) {
-            // Cria os parâmetros da URL
+            // Monta a URL da API com os parâmetros
             const queryParams = new URLSearchParams({
-                componentDefinition: componentDefinition || '', // Não é necessário encodeURIComponent
-                componentUsage: componentUsage // Não é necessário encodeURIComponent
+                componentDefinition: componentDefinition || "",
+                componentUsage: componentUsage,
             }).toString();
 
-            // Define a URL da API do Next.js
             const url = `/api/ext?${queryParams}`;
             setIframeSrc(url);
         }
