@@ -1,17 +1,16 @@
 "use client"
 
-import type React from "react"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { adminUser, regularUser } from "@/data/auth"
 import { useRouter } from "next/navigation"
+import type React from "react"
 import { useState } from "react"
 import { toast } from "sonner"
 
-export default function LoginPage() {
+export default function Login() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -34,6 +33,10 @@ export default function LoginPage() {
 
       if (user) {
         localStorage.setItem("user", JSON.stringify(user))
+        const tokenValue = "token"; // Valor do token
+        const expiresIn = 86400; // Tempo de expiração em segundos (1 dia)
+        const expiresAt = Math.floor(Date.now() / 1000) + expiresIn; // Timestamp de expiração
+        document.cookie = `token=${tokenValue}:${expiresAt}; path=/`; // Define o cookie
         toast.success("Login realizado com sucesso!")
         router.push("/")
       } else {

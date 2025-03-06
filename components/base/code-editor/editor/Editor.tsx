@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import type { EditorProps } from "@/types/editor"
 import { useTheme } from "next-themes"
 import type React from "react"
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { ActionBar } from "./ActionBar"
 import { EditorContent } from "./EditorContent"
 import { EditorTab } from "./EditorTab"
@@ -20,10 +20,12 @@ export const Editor: React.FC<EditorProps> = ({
 }) => {
   const { pendingChanges, setPendingChanges, backupData, setBackupData, saveChanges, cancelChanges } = useFileSystem()
   const tabsRef = useRef<HTMLDivElement>(null)
-  const { theme } = useTheme();
+  const { theme } = useTheme()
 
-  const activeFile = files.find((file) => file.id === activeFileId)
+  // Memoize activeFile to avoid recalculating it on every render
+  const activeFile = useMemo(() => files.find((file) => file.id === activeFileId), [files, activeFileId])
 
+  // Define handleFileClose and handleFileSelect before using them in useMemo
   const handleFileClose = (fileId: string) => {
     if (pendingChanges.files.has(fileId)) {
       if (!window.confirm("Há alterações não salvas. Deseja realmente fechar?")) {
@@ -37,6 +39,7 @@ export const Editor: React.FC<EditorProps> = ({
     onFileSelect?.(fileId)
   }
 
+  // Define handleContentChange before using it in useMemo
   const handleContentChange = (content: string) => {
     if (!activeFileId) return
 
@@ -64,6 +67,57 @@ export const Editor: React.FC<EditorProps> = ({
     onFileChange?.(activeFileId, content)
   }
 
+  // Memoize the tabs to avoid re-rendering them unnecessarily
+  const tabs = useMemo(
+    () => (
+      <div ref={tabsRef} className="border-b w-full overflow-x-auto whitespace-nowrap hide-scrollbar">
+        <div className="flex min-w-max">
+          {files.map((file) => (
+            <EditorTab
+              key={file.id}
+              file={file}
+              isActive={file.id === activeFileId}
+              onSelect={handleFileSelect}
+              onClose={handleFileClose}
+            />
+          ))}
+        </div>
+      </div>
+    ),
+    [files, activeFileId, handleFileSelect, handleFileClose]
+  )
+
+  // Memoize the editor content to avoid re-rendering it unnecessarily
+  const editorContent = useMemo(
+    () => (
+      <div className="flex-1 relative h-full min-h-0 overflow-hidden">
+        {activeFile ? (
+          <EditorContent
+            file={activeFile}
+            onChange={handleContentChange}
+            theme={theme}
+            isModified={pendingChanges.files.has(activeFile.id)}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-muted-foreground">Nenhum arquivo aberto</div>
+        )}
+      </div>
+    ),
+    [activeFile, theme, pendingChanges.files, handleContentChange]
+  )
+
+  // Memoize the action bar to avoid re-rendering it unnecessarily
+  const actionBar = useMemo(
+    () => (
+      <ActionBar
+        show={pendingChanges.fileSystem || pendingChanges.files.size > 0}
+        onSave={saveChanges}
+        onCancel={cancelChanges}
+      />
+    ),
+    [pendingChanges.fileSystem, pendingChanges.files.size, saveChanges, cancelChanges]
+  )
+
   useEffect(() => {
     const tabsElement = tabsRef.current
     if (!tabsElement) return
@@ -82,37 +136,9 @@ export const Editor: React.FC<EditorProps> = ({
 
   return (
     <div className={cn("flex flex-col h-full w-full overflow-hidden relative", className)}>
-      <div ref={tabsRef} className="border-b w-full overflow-x-auto whitespace-nowrap hide-scrollbar">
-        <div className="flex min-w-max">
-          {files.map((file) => (
-            <EditorTab
-              key={file.id}
-              file={file}
-              isActive={file.id === activeFileId}
-              onSelect={handleFileSelect}
-              onClose={handleFileClose}
-            />
-          ))}
-        </div>
-      </div>
-      <div className="flex-1 relative h-full min-h-0 overflow-hidden">
-        {activeFile ? (
-          <EditorContent
-            file={activeFile}
-            onChange={handleContentChange}
-            theme={theme}
-            isModified={pendingChanges.files.has(activeFile.id)}
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-muted-foreground">Nenhum arquivo aberto</div>
-        )}
-      </div>
-      <ActionBar
-        show={pendingChanges.fileSystem || pendingChanges.files.size > 0}
-        onSave={saveChanges}
-        onCancel={cancelChanges}
-      />
+      {tabs}
+      {editorContent}
+      {actionBar}
     </div>
   )
 }
-

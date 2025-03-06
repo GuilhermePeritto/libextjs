@@ -14,7 +14,7 @@ export const adminUser: User = {
   name: "Administrador",
   email: "adm@adm",
   role: "admin",
-  avatar: "/placeholder.svg?height=40&width=40",
+  avatar: "/placeholder",
   permissions: {
     components: ["view", "create", "edit", "delete"],
     documentation: ["view", "create", "edit", "delete"],
@@ -28,7 +28,7 @@ export const regularUser: User = {
   name: "Usuário",
   email: "user@user",
   role: "user",
-  avatar: "/placeholder.svg?height=40&width=40",
+  avatar: "/placeholder",
   permissions: {
     components: ["view"],
     documentation: ["view"],

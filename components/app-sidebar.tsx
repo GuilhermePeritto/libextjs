@@ -1,4 +1,5 @@
 "use client"
+
 import {
   BookOpen,
   ChevronDown,
@@ -15,7 +16,7 @@ import {
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -50,6 +51,7 @@ export default function AppSidebar() {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const { state } = useSidebar()
+  const router = useRouter()
 
   return (
     <Sidebar collapsible="icon" className="login-gradient text-white" style={{
@@ -96,9 +98,8 @@ export default function AppSidebar() {
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
                     asChild
-                    className={`text-white/90 hover:text-white hover:bg-white/10 ${
-                      pathname === item.url ? "bg-white/20 text-white" : ""
-                    }`}
+                    className={`text-white/90 hover:text-white hover:bg-white/10 ${pathname === item.url ? "bg-white/20 text-white" : ""
+                      }`}
                   >
                     <Link href={item.url}>
                       <item.icon className="mr-2 h-4 w-4" />
@@ -135,8 +136,9 @@ export default function AppSidebar() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => {
+              document.cookie = `token=token; path=/; exp=0` // Expira o cookie
               localStorage.removeItem("user")
-              window.location.reload()
+              router.push("/login")
             }}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Sair</span>
