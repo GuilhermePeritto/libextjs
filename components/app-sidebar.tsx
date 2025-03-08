@@ -53,6 +53,13 @@ export default function AppSidebar() {
   const { state } = useSidebar()
   const router = useRouter()
 
+  const logOut = () => {
+    // Remove o token do cookie
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    // Redireciona para a página de login
+    router.push("/login");
+  };
+
   return (
     <Sidebar collapsible="icon" className="login-gradient text-white" style={{
       background: "linear-gradient(to bottom,#6051e6 6%, #5966e7 25%, #4f81e9 55%, #499bea 69%, #43a5eb 83%, #3bbeec 99%)",
@@ -135,11 +142,7 @@ export default function AppSidebar() {
                 <span>Perfil</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {
-              document.cookie = `token=token; path=/; exp=0` // Expira o cookie
-              localStorage.removeItem("user")
-              router.push("/login")
-            }}>
+            <DropdownMenuItem onClick={() => logOut() }>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Sair</span>
             </DropdownMenuItem>

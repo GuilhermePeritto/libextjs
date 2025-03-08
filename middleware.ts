@@ -1,65 +1,72 @@
-import { RequestCookie } from "next/dist/compiled/@edge-runtime/cookies";
-import { MiddlewareConfig, NextRequest, NextResponse } from "next/server";
+import { jwtDecode } from "jwt-decode"; // Biblioteca para decodificar tokens JWT
+import { NextRequest, NextResponse } from "next/server";
 
-const REDIRECT_WHEN_NOT_AUTHENTICATED_ROUTE = '/login'
-
-const REDIRECT_WHEN_AUTHENTICATED_ROUTE = '/'
+const REDIRECT_WHEN_NOT_AUTHENTICATED_ROUTE = "/login";
+const REDIRECT_WHEN_AUTHENTICATED_ROUTE = "/";
 
 const publicRoutes = [
-    { path: '/login', whenAuthenticated: 'redirect', },
-    /* { path: '/pricing', whenAuthenticated: 'next', }, exemplo em caso de querer que alguma rota publica seja acessada
-    mesmo estando authenticado*/
-] as const
+    { path: "/login", whenAuthenticated: "redirect" },
+    // { path: "/pricing", whenAuthenticated: "next" }, // Exemplo de rota pública acessível mesmo autenticado
+] as const;
 
-function isTokenExpired(token: RequestCookie) {
-    const [tokenValue, expiresAt] = token.value.split(':');
-    if (!expiresAt) return true;
+function isTokenValid(token: string): boolean {
+    try {
+        const decoded = jwtDecode(token);
+        const currentTime = Math.floor(Date.now() / 1000);
 
-    const currentTime = Math.floor(Date.now() / 1000);
-    return parseInt(expiresAt) < currentTime; 
+        if (decoded.exp && decoded.exp < currentTime) return false;
+
+        return true;
+    } catch (error) {
+        console.error("Erro ao decodificar o token:", error);
+        return false;
+    }
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname;
-    const publicRoute = publicRoutes.find(route => route.path === path);
-    const authToken = request.cookies.get('token');
+    const publicRoute = publicRoutes.find((route) => route.path === path);
+    const authToken = request.cookies.get("token")?.value;
 
-    if (!authToken && publicRoute) return NextResponse.next()
+    // Se a rota é pública e não há token, permita o acesso
+    if (!authToken && publicRoute) {
+        return NextResponse.next();
+    }
 
+    // Se não há token e a rota não é pública, redirecione para o login
     if (!authToken && !publicRoute) {
         const redirectUrl = request.nextUrl.clone();
-
         redirectUrl.pathname = REDIRECT_WHEN_NOT_AUTHENTICATED_ROUTE;
-
         return NextResponse.redirect(redirectUrl);
     }
 
-    if (authToken && publicRoute && publicRoute.whenAuthenticated === 'redirect') {
+    // Se há token e a rota é pública com redirecionamento, redirecione para a página inicial
+    if (authToken && publicRoute && publicRoute.whenAuthenticated === "redirect") {
         const redirectUrl = request.nextUrl.clone();
-
         redirectUrl.pathname = REDIRECT_WHEN_AUTHENTICATED_ROUTE;
-
         return NextResponse.redirect(redirectUrl);
     }
 
+    // Se há token e a rota não é pública, verifique se o token é válido
     if (authToken && !publicRoute) {
+        const isValid = isTokenValid(authToken);
 
-        if (isTokenExpired(authToken)) {
+        if (!isValid) {
             const redirectUrl = request.nextUrl.clone();
-            redirectUrl.pathname = '/login';
+            redirectUrl.pathname = REDIRECT_WHEN_NOT_AUTHENTICATED_ROUTE;
 
             const response = NextResponse.redirect(redirectUrl);
-            response.cookies.delete('token');
+            response.cookies.delete("token"); // Remove o token inválido
             return response;
         }
 
-        return NextResponse.next()
+        return NextResponse.next(); // Token válido, permita o acesso
     }
 
-    return NextResponse.next()
+    return NextResponse.next();
 }
 
-export const config: MiddlewareConfig = {
+export const config = {
     matcher: [
         /*
          * Match all request paths except for the ones starting with:
@@ -68,6 +75,6 @@ export const config: MiddlewareConfig = {
          * - _next/image (image optimization files)
          * - favicon.ico, sitemap.xml, robots.txt (metadata files)
          */
-        '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+        "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
     ],
-}
+};

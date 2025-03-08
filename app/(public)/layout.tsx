@@ -1,5 +1,6 @@
 "use client"
 
+import { Toaster } from "sonner"
 import "./globals.css"
 
 export default function DashboardLayout({
@@ -11,6 +12,7 @@ export default function DashboardLayout({
       <html lang="pt-BR" suppressHydrationWarning>
         <body>
           <main>{children}</main>
+          <Toaster/>
         </body>
       </html>
     )
