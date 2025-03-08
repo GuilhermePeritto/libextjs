@@ -7,9 +7,18 @@ export async function GET(request: Request) {
     await dbConnect();
 
     try {
-        const user = await getUserById(cookies().get("token").value);
-        return NextResponse.json(user, { status: 200 });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+      const token = cookies().get("token")?.value;
+      if (!token) {
+          return NextResponse.json({ error: "Token não encontrado" }, { status: 401 });
+      }
+
+      const user = await getUserById(token);
+      if (!user) {
+          return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+      }
+
+      return NextResponse.json(user, { status: 200 });
+  } catch (error: any) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

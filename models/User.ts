@@ -5,11 +5,16 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  role: string;
-  avatar: string;
-  permissions: {
+  avatar?: string;
+  status: "active" | "inactive";
+  useGroupPermissions: boolean;
+  permissionGroup?: string;
+  permissions?: {
     [key: string]: string[];
   };
+  createdAt: Date;
+  lastLogin?: Date;
+  lastPasswordChange?: Date;
   matchPassword: (enteredPassword: string) => Promise<boolean>;
 }
 
@@ -17,9 +22,14 @@ const userSchema: Schema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, required: true },
-  avatar: { type: String, required: true },
-  permissions: { type: Map, of: [String], required: true },
+  avatar: { type: String, default: "/placeholder.svg" },
+  status: { type: String, enum: ["active", "inactive"], default: "active" },
+  useGroupPermissions: { type: Boolean, default: true },
+  permissionGroup: { type: String },
+  permissions: { type: Map, of: [String], default: {} },
+  createdAt: { type: Date, default: Date.now },
+  lastLogin: { type: Date },
+  lastPasswordChange: { type: Date },
 });
 
 // Método para comparar senhas

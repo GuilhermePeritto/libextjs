@@ -13,6 +13,7 @@ import {
   Shield,
   Sun,
   User,
+  Users,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import Link from "next/link"
@@ -44,6 +45,7 @@ const navItems = [
   { title: "Componentes", url: "/components", icon: Puzzle },
   { title: "Documentação", url: "/documentation", icon: FileText },
   { title: "Referência da API", url: "/api-reference", icon: Search },
+  { title: "Usuários", url: "/users", icon: Users },
   { title: "Permissões", url: "/permissions", icon: Shield },
 ]
 

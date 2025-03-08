@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -12,107 +12,151 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { usePermissions } from "@/hooks/use-permissions"
-import { Plus } from "lucide-react"
-import { useState } from "react"
-import { toast } from "sonner"
-
-interface PermissionGroup {
-  id: string
-  name: string
-  description: string
-  permissions: {
-    [key: string]: string[]
-  }
-  users: User[]
-}
-
-interface User {
-  id: string
-  name: string
-  email: string
-  role: string
-  avatar: string
-}
-
-const initialGroups: PermissionGroup[] = [
-  {
-    id: "admin",
-    name: "Administradores",
-    description: "Acesso total ao sistema",
-    permissions: {
-      components: ["view", "create", "edit", "delete"],
-      documentation: ["view", "create", "edit", "delete"],
-      users: ["view", "create", "edit", "delete"],
-      permissions: ["view", "manage"],
-    },
-    users: [
-      {
-        id: "1",
-        name: "Administrador",
-        email: "adm@adm",
-        role: "admin",
-        avatar: "/placeholder",
-      },
-    ],
-  },
-  {
-    id: "users",
-    name: "Usuários",
-    description: "Acesso básico ao sistema",
-    permissions: {
-      components: ["view"],
-      documentation: ["view"],
-      users: ["view"],
-    },
-    users: [
-      {
-        id: "2",
-        name: "Usuário",
-        email: "user@user",
-        role: "user",
-        avatar: "/placeholder",
-      },
-    ],
-  },
-]
-
-const modules = [
-  {
-    name: "components",
-    label: "Componentes",
-    actions: ["view", "create", "edit", "delete"],
-  },
-  {
-    name: "documentation",
-    label: "Documentação",
-    actions: ["view", "create", "edit", "delete"],
-  },
-  {
-    name: "users",
-    label: "Usuários",
-    actions: ["view", "create", "edit", "delete"],
-  },
-  {
-    name: "permissions",
-    label: "Permissões",
-    actions: ["view", "manage"],
-  },
-]
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePermissions } from "@/hooks/use-permissions";
+import { IModule } from "@/models/Module";
+import { IPermissionGroup } from "@/models/Permission";
+import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function PermissionsPage() {
-  const { hasPermission } = usePermissions()
-  const [groups, setGroups] = useState<PermissionGroup[]>(initialGroups)
-  const [selectedGroup, setSelectedGroup] = useState<PermissionGroup | null>(null)
-  const [newGroup, setNewGroup] = useState({
-    name: "",
-    description: "",
-  })
+  const { hasPermission } = usePermissions();
+  const [groups, setGroups] = useState<IPermissionGroup[]>([]);
+  const [modules, setModules] = useState<IModule[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<IPermissionGroup | null>(null);
+  const [newGroup, setNewGroup] = useState({ name: "", description: "" });
+  const [loading, setLoading] = useState(true);
+
+  // Buscar grupos de permissões e módulos
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [groupsResponse, modulesResponse] = await Promise.all([
+          fetch("/api/permissions"),
+          fetch("/api/modules"),
+        ]);
+
+        if (!groupsResponse.ok || !modulesResponse.ok) {
+          throw new Error("Erro ao carregar dados");
+        }
+
+        const groupsData = await groupsResponse.json();
+        const modulesData = await modulesResponse.json();
+
+        setGroups(groupsData);
+        setModules(modulesData);
+      } catch (error) {
+        toast.error("Erro ao carregar dados");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Criar um novo grupo de permissões
+  const handleCreateGroup = async () => {
+    if (!newGroup.name || !newGroup.description) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/permissions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newGroup),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao criar grupo");
+      }
+
+      const createdGroup = await response.json();
+      setGroups([...groups, createdGroup]);
+      setNewGroup({ name: "", description: "" });
+      toast.success("Grupo criado com sucesso!");
+    } catch (error) {
+      toast.error("Erro ao criar grupo");
+    }
+  };
+
+  // Atualizar permissões de um grupo
+  const handleUpdatePermissions = async (group: IPermissionGroup) => {
+    try {
+      const response = await fetch(`/api/permissions/${group._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ permissions: group.permissions }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar permissões");
+      }
+
+      const updatedGroup = await response.json();
+      setGroups(groups.map((g) => (g._id === updatedGroup._id ? updatedGroup : g)));
+      toast.success("Permissões atualizadas com sucesso!");
+    } catch (error) {
+      toast.error("Erro ao atualizar permissões");
+    }
+  };
+
+  // Adicionar um usuário a um grupo
+  const handleAddUserToGroup = async (groupId: string, userId: string) => {
+    try {
+      const response = await fetch(`/api/permissions/${groupId}/add-user`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao adicionar usuário ao grupo");
+      }
+
+      const updatedGroup = await response.json();
+      setGroups(groups.map((g) => (g._id === updatedGroup._id ? updatedGroup : g)));
+      toast.success("Usuário adicionado ao grupo!");
+    } catch (error) {
+      toast.error("Erro ao adicionar usuário ao grupo");
+    }
+  };
+
+  // Remover um usuário de um grupo
+  const handleRemoveUserFromGroup = async (groupId: string, userId: string) => {
+    try {
+      const response = await fetch(`/api/permissions/${groupId}/remove-user`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao remover usuário do grupo");
+      }
+
+      const updatedGroup = await response.json();
+      setGroups(groups.map((g) => (g._id === updatedGroup._id ? updatedGroup : g)));
+      toast.success("Usuário removido do grupo!");
+    } catch (error) {
+      toast.error("Erro ao remover usuário do grupo");
+    }
+  };
 
   if (!hasPermission("permissions", "manage")) {
     return (
@@ -123,52 +167,15 @@ export default function PermissionsPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
-  const handleCreateGroup = () => {
-    if (!newGroup.name || !newGroup.description) {
-      toast.error("Preencha todos os campos")
-      return
-    }
-
-    const newGroupData: PermissionGroup = {
-      id: Date.now().toString(),
-      name: newGroup.name,
-      description: newGroup.description,
-      permissions: {},
-      users: [],
-    }
-
-    setGroups([...groups, newGroupData])
-    setNewGroup({ name: "", description: "" })
-    toast.success("Grupo criado com sucesso!")
-  }
-
-  const handleUpdatePermissions = (group: PermissionGroup) => {
-    const updatedGroups = groups.map((g) => (g.id === group.id ? group : g))
-    setGroups(updatedGroups)
-    toast.success("Permissões atualizadas com sucesso!")
-  }
-
-  const handleAddUserToGroup = (group: PermissionGroup, user: User) => {
-    const updatedGroup = {
-      ...group,
-      users: [...group.users, user],
-    }
-    const updatedGroups = groups.map((g) => (g.id === group.id ? updatedGroup : g))
-    setGroups(updatedGroups)
-    toast.success("Usuário adicionado ao grupo!")
-  }
-
-  const handleRemoveUserFromGroup = (group: PermissionGroup, userId: string) => {
-    const updatedGroup = {
-      ...group,
-      users: group.users.filter((u) => u.id !== userId),
-    }
-    const updatedGroups = groups.map((g) => (g.id === group.id ? updatedGroup : g))
-    setGroups(updatedGroups)
-    toast.success("Usuário removido do grupo!")
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <p className="text-center">Carregando...</p>
+      </div>
+    );
   }
 
   return (
@@ -215,7 +222,7 @@ export default function PermissionsPage() {
 
       <div className="grid gap-6">
         {groups.map((group) => (
-          <Card key={group.id}>
+          <Card key={group._id}>
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
@@ -241,7 +248,7 @@ export default function PermissionsPage() {
                       <TabsContent value="permissions">
                         <div className="space-y-4">
                           {modules.map((module) => (
-                            <Card key={module.name}>
+                            <Card key={module._id}>
                               <CardHeader>
                                 <CardTitle className="text-lg">{module.label}</CardTitle>
                               </CardHeader>
@@ -255,22 +262,22 @@ export default function PermissionsPage() {
                                         onCheckedChange={(checked) => {
                                           const updatedPermissions = {
                                             ...group.permissions,
-                                          }
+                                          };
                                           if (checked) {
                                             updatedPermissions[module.name] = [
                                               ...(updatedPermissions[module.name] || []),
                                               action,
-                                            ]
+                                            ];
                                           } else {
                                             updatedPermissions[module.name] = updatedPermissions[module.name].filter(
-                                              (a) => a !== action,
-                                            )
+                                              (a) => a !== action
+                                            );
                                           }
                                           const updatedGroup = {
                                             ...group,
                                             permissions: updatedPermissions,
-                                          }
-                                          handleUpdatePermissions(updatedGroup)
+                                          };
+                                          handleUpdatePermissions(updatedGroup);
                                         }}
                                       />
                                       <Label htmlFor={`${module.name}-${action}`} className="capitalize">
@@ -289,30 +296,20 @@ export default function PermissionsPage() {
                           <div className="flex items-center gap-4">
                             <Select
                               onValueChange={(value) => {
-                                const user = initialGroups.flatMap((g) => g.users).find((u) => u.id === value)
-                                if (user && !group.users.find((u) => u.id === user.id)) {
-                                  handleAddUserToGroup(group, user)
-                                }
+                                handleAddUserToGroup(group._id, value);
                               }}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Adicionar usuário" />
                               </SelectTrigger>
                               <SelectContent>
-                                {initialGroups
-                                  .flatMap((g) => g.users)
-                                  .filter((user) => !group.users.find((u) => u.id === user.id))
-                                  .map((user) => (
-                                    <SelectItem key={user.id} value={user.id}>
-                                      {user.name}
-                                    </SelectItem>
-                                  ))}
+                                {/* Aqui você pode buscar os usuários disponíveis */}
                               </SelectContent>
                             </Select>
                           </div>
                           <div className="space-y-2">
                             {group.users.map((user) => (
-                              <div key={user.id} className="flex items-center justify-between p-2 rounded-lg border">
+                              <div key={user._id} className="flex items-center justify-between p-2 rounded-lg border">
                                 <div className="flex items-center gap-3">
                                   <Avatar>
                                     <AvatarImage src={user.avatar} />
@@ -326,7 +323,7 @@ export default function PermissionsPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleRemoveUserFromGroup(group, user.id)}
+                                  onClick={() => handleRemoveUserFromGroup(group._id, user._id)}
                                 >
                                   Remover
                                 </Button>
@@ -341,7 +338,7 @@ export default function PermissionsPage() {
               </div>
               <div className="flex flex-wrap gap-2 mt-4">
                 {group.users.map((user) => (
-                  <Badge key={user.id} variant="secondary">
+                  <Badge key={user._id} variant="secondary">
                     {user.name}
                   </Badge>
                 ))}
@@ -367,6 +364,5 @@ export default function PermissionsPage() {
         ))}
       </div>
     </div>
-  )
+  );
 }
-
