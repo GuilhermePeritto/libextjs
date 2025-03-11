@@ -1,122 +1,96 @@
-"use client"
-
-import type React from "react"
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Upload } from "lucide-react"
-import { useEffect, useState } from "react"
-
-// Tipo para usuário
-export interface User {
-  id?: string
-  name: string
-  email: string
-  avatar?: string
-  status: "active" | "inactive"
-  useGroupPermissions: boolean
-  permissionGroup?: string
-  permissions?: {
-    [key: string]: string[]
-  }
-}
-
-// Dados de exemplo para grupos de permissões
-export const permissionGroups = [
-  { id: "admin", name: "Administradores" },
-  { id: "users", name: "Usuários" },
-  { id: "developers", name: "Desenvolvedores" },
-  { id: "analysts", name: "Analistas" },
-  { id: "support", name: "Suporte" },
-]
-
-// Módulos de permissões
-export const modules = [
-  {
-    name: "components",
-    label: "Componentes",
-    actions: ["view", "create", "edit", "delete"],
-  },
-  {
-    name: "documentation",
-    label: "Documentação",
-    actions: ["view", "create", "edit", "delete"],
-  },
-  {
-    name: "users",
-    label: "Usuários",
-    actions: ["view", "create", "edit", "delete"],
-  },
-  {
-    name: "permissions",
-    label: "Permissões",
-    actions: ["view", "manage"],
-  },
-]
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { IModule } from "@/models/Module";
+import { IPermissionGroup } from "@/models/Permission";
+import { IUser } from "@/models/User";
+import { Upload } from "lucide-react";
+import mongoose from "mongoose";
+import React, { useEffect, useState } from "react";
 
 interface UserFormProps {
-  user?: User
-  isNewUser?: boolean
-  onSubmit: (user: User, password?: string) => void
-  onCancel: () => void
+  user?: IUser;
+  isNewUser?: boolean;
+  onSubmit: (user: IUser, password?: string) => void;
+  onCancel: () => void;
 }
 
 export function UserForm({ user, isNewUser = false, onSubmit, onCancel }: UserFormProps) {
-  const defaultUser: User = {
+  const defaultUser: IUser = {
     name: "",
     email: "",
-    avatar: "/placeholder.svg?height=128&width=128",
+    avatar: "/avatar.png",
     status: "active",
     useGroupPermissions: true,
-    permissionGroup: "",
-  }
+    permissionGroup: new mongoose.Types.ObjectId(),
+    permissions: {},
+    password: "",
+    createdAt: new Date(),
+  };
 
-  const [formData, setFormData] = useState<User>(user || defaultUser)
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const [formData, setFormData] = useState<IUser>(user || defaultUser);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [modules, setModules] = useState<IModule[]>([]);
+  const [permissionGroups, setPermissionGroups] = useState<IPermissionGroup[]>([]);
 
   useEffect(() => {
     if (user) {
-      setFormData(user)
+      setFormData(user);
     }
-  }, [user])
+  }, [user]);
 
-  // Função para atualizar permissões
+  useEffect(() => {
+    // Buscar módulos e permissões
+    const fetchModulesAndPermissions = async () => {
+      try {
+        const modulesResponse = await fetch("/api/modules");
+        const modulesData = await modulesResponse.json();
+        setModules(modulesData);
+
+        const permissionGroupsResponse = await fetch("/api/permissions");
+        const permissionGroupsData = await permissionGroupsResponse.json();
+        setPermissionGroups(permissionGroupsData);
+      } catch (error) {
+        console.error("Erro ao buscar módulos e permissões:", error);
+      }
+    };
+
+    fetchModulesAndPermissions();
+  }, []);
+
   const updatePermission = (module: string, action: string, checked: boolean) => {
     setFormData((prev) => {
-      const newPermissions = { ...prev.permissions } || {}
+      const newPermissions = { ...prev.permissions } || {};
 
       if (!newPermissions[module]) {
-        newPermissions[module] = []
+        newPermissions[module] = [];
       }
 
       if (checked) {
-        newPermissions[module] = [...newPermissions[module], action]
+        newPermissions[module] = [...newPermissions[module], action];
       } else {
-        newPermissions[module] = newPermissions[module].filter((a) => a !== action)
+        newPermissions[module] = newPermissions[module].filter((a) => a !== action);
       }
 
-      return { ...prev, permissions: newPermissions }
-    })
-  }
+      return { ...prev, permissions: newPermissions };
+    });
+  };
 
-  // Função para verificar se uma permissão está marcada
   const hasPermissionChecked = (module: string, action: string) => {
-    return formData.permissions?.[module]?.includes(action) || false
-  }
+    return formData.permissions?.[module]?.includes(action) || false;
+  };
 
-  // Função para lidar com o envio do formulário
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(formData, isNewUser ? password : undefined)
-  }
+    e.preventDefault();
+    onSubmit(formData, isNewUser ? password : undefined);
+  };
 
   return (
     <form onSubmit={handleSubmit}>
@@ -240,15 +214,15 @@ export function UserForm({ user, isNewUser = false, onSubmit, onCancel }: UserFo
                 <div className="space-y-2">
                   <Label htmlFor="permissionGroup">Grupo de Permissões</Label>
                   <Select
-                    value={formData.permissionGroup}
-                    onValueChange={(value) => setFormData({ ...formData, permissionGroup: value })}
+                    value={formData.permissionGroup.toString()}
+                    onValueChange={(value) => setFormData({ ...formData, permissionGroup: new mongoose.Types.ObjectId(value) })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um grupo" />
                     </SelectTrigger>
                     <SelectContent>
                       {permissionGroups.map((group) => (
-                        <SelectItem key={group.id} value={group.id}>
+                        <SelectItem key={group._id.toString()} value={group._id.toString()}>
                           {group.name}
                         </SelectItem>
                       ))}
@@ -299,6 +273,5 @@ export function UserForm({ user, isNewUser = false, onSubmit, onCancel }: UserFo
         <Button type="submit">{isNewUser ? "Criar Usuário" : "Salvar Alterações"}</Button>
       </div>
     </form>
-  )
+  );
 }
-

@@ -20,7 +20,7 @@ export function usePermissions() {
           throw new Error("Erro ao carregar permissões do usuário");
         }
 
-        const user = await response.json();
+        const user : IUser = await response.json();
         setUser(user);
         if (!user) return;
 
@@ -28,7 +28,7 @@ export function usePermissions() {
 
         if (user.useGroupPermissions && user.permissionGroup) {
           // Busca as permissões do grupo
-          const response = await fetch(`/api/permissions/${user.permissionGroup}`);
+          const response = await fetch(`/api/permissions/${user.permissionGroup._id}`);
           if (!response.ok) {
             throw new Error("Erro ao carregar permissões do grupo");
           }

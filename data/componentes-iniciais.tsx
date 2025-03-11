@@ -1,6 +1,5 @@
 "use client"
 
-
 export interface ComponentFile {
   name: string
   content: string

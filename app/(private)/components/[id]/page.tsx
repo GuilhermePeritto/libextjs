@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { ExtComponent } from "@/components/ext-component"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,21 +18,13 @@ import {
 import { Check, Copy, ExternalLink } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { toast } from "sonner"
 
 // Função auxiliar para renderizar o código
 const renderCode = (item: ComponentFile | ComponentFolder): React.ReactNode => {
   if ("content" in item) {
     return (
-      <SyntaxHighlighter
-        language="jsx"
-        style={oneDark}
-        customStyle={{ background: "transparent", fontSize: "14px", lineHeight: "1.5" }}
-      >
-        {item.content}
-      </SyntaxHighlighter>
+      <div></div>
     )
   } else {
     return (
@@ -188,56 +179,10 @@ export default function ComponenteDetalhes({ params }: { params: { id: string } 
               </Card>
             </TabsContent>
             <TabsContent value="usage" className="mt-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <h3 className="text-lg font-semibold mb-4">Como Usar</h3>
-                  <p className="mb-4">Para usar este componente, siga os passos abaixo:</p>
-                  <ol className="list-decimal list-inside space-y-2">
-                    <li>Importe o componente no seu arquivo:</li>
-                    <SyntaxHighlighter
-                      language="jsx"
-                      style={oneDark}
-                      customStyle={{ background: "transparent", fontSize: "14px", lineHeight: "1.5" }}
-                    >
-                      {`import { ${componente.nome} } from '@/components/${componente.nome.toLowerCase()}';`}
-                    </SyntaxHighlighter>
-                    <li>Use o componente em seu JSX:</li>
-                    <SyntaxHighlighter
-                      language="jsx"
-                      style={oneDark}
-                      customStyle={{ background: "transparent", fontSize: "14px", lineHeight: "1.5" }}
-                    >
-                      {`<${componente.nome}>
-  {/* Conteúdo do componente */}
-</${componente.nome}>`}
-                    </SyntaxHighlighter>
-                    <li>Personalize as propriedades conforme necessário.</li>
-                  </ol>
-                </CardContent>
-              </Card>
+             <div></div>
             </TabsContent>
             <TabsContent value="examples" className="mt-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <h3 className="text-lg font-semibold mb-4">Exemplos</h3>
-                  <Accordion type="single" collapsible className="w-full">
-                    {componente.exemplos?.map((exemplo, index) => (
-                      <AccordionItem value={`item-${index}`} key={index}>
-                        <AccordionTrigger>{exemplo.titulo}</AccordionTrigger>
-                        <AccordionContent>
-                          <SyntaxHighlighter
-                            language="jsx"
-                            style={oneDark}
-                            customStyle={{ background: "transparent", fontSize: "14px", lineHeight: "1.5" }}
-                          >
-                            {exemplo.codigo}
-                          </SyntaxHighlighter>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </CardContent>
-              </Card>
+           <div></div>
             </TabsContent>
           </Tabs>
         </CardContent>

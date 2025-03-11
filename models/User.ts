@@ -8,7 +8,7 @@ export interface IUser extends Document {
   avatar?: string;
   status: "active" | "inactive";
   useGroupPermissions: boolean;
-  permissionGroup?: string;
+  permissionGroup:  mongoose.Types.ObjectId;
   permissions?: {
     [key: string]: string[];
   };
@@ -25,7 +25,7 @@ const userSchema: Schema = new mongoose.Schema({
   avatar: { type: String, default: "/placeholder.svg" },
   status: { type: String, enum: ["active", "inactive"], default: "active" },
   useGroupPermissions: { type: Boolean, default: true },
-  permissionGroup: { type: String },
+  permissionGroup: { type: mongoose.Schema.Types.ObjectId, ref: "PermissionGroup" },
   permissions: { type: Map, of: [String], default: {} },
   createdAt: { type: Date, default: Date.now },
   lastLogin: { type: Date },

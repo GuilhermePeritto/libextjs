@@ -20,13 +20,13 @@ export const createUser = async (userData: Partial<IUser>): Promise<IUser> => {
 
 // Buscar todos os usuários
 export const getUsers = async (): Promise<IUser[]> => {
-  return await User.find();
+  return await User.find().populate('permissionGroup');
 };
 
 // Buscar um usuário por ID
 export const getUserById = async (token : string): Promise<IUser | null> => {
   const decodedToken = jwtDecode(token)
-  return await User.findById(decodedToken.user); 
+  return await User.findById(decodedToken.user).populate('permissionGroup'); 
 };
 
 // Atualizar um usuário
